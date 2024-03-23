@@ -2,8 +2,13 @@
 
 import React, { useState } from 'react';
 import { View, TextInput, Button, StyleSheet, Text } from 'react-native';
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import HomePage from './HomePage';
 
-const LoginScreen = () => {
+const Stack = createNativeStackNavigator();
+
+const LoginScreen = ({navigation}) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -18,6 +23,12 @@ const LoginScreen = () => {
     // Perform login logic (e.g., call an API to authenticate the user)
     // For demonstration, we're just logging the username and password
     console.log('Login with username:', username, 'and password:', password);
+//    alert('Login successful!');
+
+
+
+
+
 
     // Reset error state
     setError('');
@@ -40,7 +51,7 @@ const LoginScreen = () => {
         value={password}
         onChangeText={setPassword}
       />
-      <Button title="Login" onPress={handleLogin} />
+      <Button title="Login"  onPress={()=>{navigation.navigate("HomePage")}} />
     </View>
   );
 };
