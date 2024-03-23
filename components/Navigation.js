@@ -3,7 +3,6 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import SplashScreen from './SplashScreen';
 import LoginScreen from './LoginScreen';
-import HomePage from './HomePage';
 
 const Stack = createStackNavigator();
 
@@ -15,7 +14,6 @@ const Navigation = () => {
         component={SplashScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen name="Home" component={HomePage} />
       <Stack.Screen name="Login" component={LoginScreen} />
     </Stack.Navigator>
   );
