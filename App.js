@@ -1,56 +1,3 @@
-/*
-
-import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import HomeScreen from "./components/HomeScreen";
-import DetailsScreen from "./components/DetailsScreen";
-import LoginScreen from "./components/LoginScreen";
-import SplashScreen from "./components/SplashScreen";
-
-const Stack = createNativeStackNavigator();
-
-export default function App() {
-  return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen name="Splash" component={SplashScreen} />
-        <Stack.Screen
-          name="Login"
-          component={LoginScreen}
-          options={{
-            title: "Login",
-            headerStyle: {
-              backgroundColor: "orange",
-            },
-            headerTintColor: "white",
-          }}
-        />
-        <Stack.Screen
-          name="Home"
-          component={HomeScreen}
-          options={{
-            title: "Home",
-            headerStyle: {
-              backgroundColor: "orange",
-            },
-            headerTintColor: "white",
-          }}
-        />
-        <Stack.Screen name="Details" component={DetailsScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
-*/
-
 import React, { useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -67,7 +14,6 @@ import HomeScreen from "./components/HomeScreen";
 import LoginScreen from "./components/LoginScreen";
 import SplashScreen from "./components/SplashScreen";
 import { useFonts, Inter_700Bold } from "@expo-google-fonts/inter";
-import DetailsScreen from "./components/DetailsScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -107,17 +53,6 @@ export default function App() {
               component={HomeScreen}
               options={{
                 title: "Home",
-                headerStyle: {
-                  backgroundColor: "orange",
-                },
-                headerTintColor: "white",
-              }}
-            />
-            <Stack.Screen
-              name="Details"
-              component={DetailsScreen}
-              options={{
-                title: "Details",
                 headerStyle: {
                   backgroundColor: "orange",
                 },
