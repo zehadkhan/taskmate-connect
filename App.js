@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { StatusBar } from "expo-status-bar";
+
 import {
   ActivityIndicator,
   Image,
@@ -14,6 +14,7 @@ import HomeScreen from "./components/HomeScreen";
 import LoginScreen from "./components/LoginScreen";
 import SplashScreen from "./components/SplashScreen";
 import { useFonts, Inter_700Bold } from "@expo-google-fonts/inter";
+import SignUpScreen from "./components/SignUpScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -53,6 +54,17 @@ export default function App() {
               component={HomeScreen}
               options={{
                 title: "Home",
+                headerStyle: {
+                  backgroundColor: "orange",
+                },
+                headerTintColor: "white",
+              }}
+            />
+            <Stack.Screen
+              name="SignUp"
+              component={SignUpScreen}
+              options={{
+                title: "Sign Up",
                 headerStyle: {
                   backgroundColor: "orange",
                 },

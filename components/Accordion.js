@@ -4,6 +4,8 @@ import {
   Text,
   Animated,
   ActivityIndicator,
+  Button,
+  Alert,
 } from "react-native";
 import { StyleSheet } from "react-native-web";
 import { AntDesign } from "@expo/vector-icons";
@@ -65,6 +67,14 @@ const Accordion = () => {
         style={[styles.content, { height: heightAnimationInterpolation }]}
       >
         <Text style={styles.details}>Task Details</Text>
+
+        <View style={styles.buttonStyle}>
+          <Button
+            title="Done"
+            color="#f194ff"
+            onPress={() => Alert.alert("Task complete!")}
+          />
+        </View>
       </Animated.View>
     </View>
   );
@@ -81,7 +91,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    contentAlign: 'center',
+    contentAlign: "center",
   },
   TitleStyle: {
     fontFamily: "Inter-Bold",
@@ -95,5 +105,8 @@ const styles = StyleSheet.create({
     fontFamily: "Inter-Regular",
     fontSize: 16,
     color: "gray",
+  },
+  buttonStyle: {
+    marginTop: 8,
   },
 });

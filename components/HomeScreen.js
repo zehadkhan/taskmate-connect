@@ -15,15 +15,24 @@ const HomeScreen = ({ navigation, route }) => {
   // const password = route.params.dummyObject.password;
   const [taskTitle, setTaskTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [assignTo, setAssignTo] = useState();
   const [error, setError] = useState("");
 
   const handleTaskCreation = () => {
-    if (taskTitle.trim() === "" || description.trim() === "") {
-      setError("Please enter Task Title and Description");
+    if (taskTitle.trim() === "") {
+      setError("Please enter task title");
+      return;
+    }
+    if (description.trim() === "") {
+      setError("Please enter description");
+      return;
+    }
+    if (assignTo.trim() === "") {
+      setError("Please enter user id");
       return;
     }
 
-    console.log("Task Title:", taskTitle, "and detail:", description);
+    console.log(taskTitle, description, assignTo);
 
     // Reset error state
     setError("");
@@ -50,6 +59,13 @@ const HomeScreen = ({ navigation, route }) => {
             value={description}
             onChangeText={setDescription}
           />
+          <TextInput
+            style={styles.textInput}
+            placeholder="Assign To"
+            value={assignTo}
+            onChangeText={setAssignTo}
+          />
+          
           {error ? <Text style={styles.error}>{error}</Text> : null}
           <TouchableOpacity
             onPress={() => {

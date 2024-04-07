@@ -8,12 +8,16 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Picker } from "@react-native-picker/picker";
 import { useFonts, Inter_700Bold } from "@expo-google-fonts/inter";
 
-const LoginScreen = ({ navigation, route }) => {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+const SignUpScreen = ({ navigation, route }) => {
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("");
+
+  const [error, setError] = useState("");
 
   let [fontsLoaded] = useFonts({
     "Inter-Bold": Inter_700Bold,
@@ -22,28 +26,36 @@ const LoginScreen = ({ navigation, route }) => {
     return <ActivityIndicator size="large" color="#00ff00" />;
   }
 
-  const handleLogin = () => { 
+  const handleSignUp = () => {
     // Perform validation (e.g., check if username and password are not empty)
-    if (username.trim() === '') {
-      setError('Please enter username');
+    if (username.trim() === "") {
+      setError("Please enter username");
       return;
     }
-    if (password.trim() === '') {
-      setError('Please enter password');
+    if (email.trim() === "") {
+      setError("Please enter email");
+      return;
+    }
+    if (password.trim() === "") {
+      setError("Please enter password");
+      return;
+    }
+    if (role.trim() === "") {
+      setError("Please enter role");
       return;
     }
 
     // Perform login logic (e.g., call an API to authenticate the user)
     // For demonstration, we're just logging the username and password
-    console.log('Login with username:', username, 'and password:', password);
+    console.log(username, email, password, role);
 
     // Reset error state
-    setError('');
+    setError("");
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Please Login</Text>
+      <Text style={styles.title}>New Account</Text>
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       <TextInput
@@ -54,33 +66,35 @@ const LoginScreen = ({ navigation, route }) => {
       />
       <TextInput
         style={styles.input}
+        placeholder="email"
+        value={email}
+        onChangeText={setEmail}
+      />
+      <TextInput
+        style={styles.input}
         placeholder="Password"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
       />
+      <Picker
+        selectedValue={role}
+        style={styles.input}
+        onValueChange={(itemValue, itemIndex) => setRole(itemValue)}
+      >
+        <Picker.Item label="Select Role" value="" />
+        <Picker.Item label="Student" value="student" />
+        <Picker.Item label="Teacher" value="teacher" />
+      </Picker>
 
       <TouchableOpacity
         onPress={() => {
           navigation.navigate("Home");
-          handleLogin()
+          handleSignUp();
         }}
         style={styles.buttonStyle}
       >
-        <Text style={styles.buttonTextStyle}>Login</Text>
-        <Image
-          style={styles.buttonIconImg}
-          source={require("../assets/arrow.png")}
-        />
-      </TouchableOpacity>
-      <Text style={{color: "red",}}>OR</Text>
-      <TouchableOpacity
-        onPress={() => {
-          navigation.navigate("SignUp");
-        }}
-        style={styles.signUpButtonStyle}
-      >
-        <Text style={styles.buttonTextStyle}>Sign up</Text>
+        <Text style={styles.buttonTextStyle}>Create</Text>
         <Image
           style={styles.buttonIconImg}
           source={require("../assets/arrow.png")}
@@ -90,7 +104,7 @@ const LoginScreen = ({ navigation, route }) => {
   );
 };
 
-export default LoginScreen;
+export default SignUpScreen;
 
 const styles = StyleSheet.create({
   container: {
