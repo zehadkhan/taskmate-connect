@@ -1,3 +1,4 @@
+
 import {
   TouchableWithoutFeedback,
   View,
@@ -9,17 +10,19 @@ import {
 } from "react-native";
 import { StyleSheet } from "react-native-web";
 import { AntDesign } from "@expo/vector-icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   useFonts,
   Inter_700Bold,
   Inter_400Regular,
 } from "@expo-google-fonts/inter";
 
-const Accordion = () => {
+const Accordion = ({tasks}) => {
   const [open, setOpen] = useState(false);
   const [animation] = useState(new Animated.Value(0));
-
+  
+  
+  console.log('accordion', tasks);
   //! This function is using for toggle the title
   const toggleAccordion = () => {
     if (!open) {
@@ -55,7 +58,7 @@ const Accordion = () => {
     <View style={styles.container}>
       <TouchableWithoutFeedback onPress={toggleAccordion}>
         <View style={styles.header}>
-          <Text style={styles.TitleStyle}>Task Title</Text>
+          <Text style={styles.TitleStyle}>{tasks?.title}</Text>
           <AntDesign
             name={open ? "caretdown" : "caretright"}
             size={20}
@@ -66,7 +69,7 @@ const Accordion = () => {
       <Animated.View
         style={[styles.content, { height: heightAnimationInterpolation }]}
       >
-        <Text style={styles.details}>Task Details</Text>
+        <Text style={styles.details}>{tasks?.description}</Text>
 
         <View style={styles.buttonStyle}>
           <Button
@@ -110,3 +113,4 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
 });
+

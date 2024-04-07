@@ -7,7 +7,7 @@ import {
   View,
 } from "react-native";
 import Accordion from "./Accordion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const HomeScreen = ({ navigation, route }) => {
   // const gmail = route.params.gmail;
@@ -17,6 +17,14 @@ const HomeScreen = ({ navigation, route }) => {
   const [description, setDescription] = useState("");
   const [assignTo, setAssignTo] = useState();
   const [error, setError] = useState("");
+
+  const [tasks, setTasks] = useState();
+  useEffect(() => {
+    fetch("http://localhost:5000/tasks")
+      .then((res) => res.json())
+      .then((data) => setTasks(data));
+  }, []);
+  console.log("tasks: ", tasks);
 
   const handleTaskCreation = () => {
     if (taskTitle.trim() === "") {
@@ -65,7 +73,7 @@ const HomeScreen = ({ navigation, route }) => {
             value={assignTo}
             onChangeText={setAssignTo}
           />
-          
+
           {error ? <Text style={styles.error}>{error}</Text> : null}
           <TouchableOpacity
             onPress={() => {
@@ -82,8 +90,7 @@ const HomeScreen = ({ navigation, route }) => {
           </TouchableOpacity>
         </View>
       </View>
-
-      <Accordion />
+      {tasks && tasks.map((task) => <Accordion tasks={tasks} key={task.id} />)}
     </View>
   );
 };
@@ -98,8 +105,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 5,
-    height:200,
-    textAlignVertical: 'top',
+    height: 200,
+    textAlignVertical: "top",
   },
   textInput: {
     width: "80%",
