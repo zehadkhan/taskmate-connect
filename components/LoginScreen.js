@@ -163,6 +163,7 @@ import {
   View,
 } from "react-native";
 import { useFonts, Inter_700Bold } from "@expo-google-fonts/inter";
+import * as Cookies from 'expo-cookie';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -176,6 +177,12 @@ const LoginScreen = ({ navigation }) => {
   if (!fontsLoaded) {
     return <ActivityIndicator size="large" color="#00ff00" />;
   }
+  const setCookie = async (data) => {
+    await Cookies.setAsync('accessToken', data.accessToken, {
+      domain: 'your-domain.com', // Set your domain here
+    });
+    // You can set more cookies if needed
+  };
 
   const handleLogin = async () => { 
     // Perform validation (e.g., check if email and password are not empty)
@@ -191,7 +198,7 @@ const LoginScreen = ({ navigation }) => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/login', {
+      const response = await fetch('https://taskmate-backend.onrender.com/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -207,6 +214,10 @@ const LoginScreen = ({ navigation }) => {
       if (!response.ok) {
         setError(data.message || 'Something went wrong');
         return;
+      }
+
+      if(response.ok){
+        await setCookie(data);
       }
 
       // If login successful, navigate to Home screen

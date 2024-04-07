@@ -19,12 +19,28 @@ const HomeScreen = ({ navigation, route }) => {
   const [error, setError] = useState("");
 
   const [tasks, setTasks] = useState();
+  // useEffect(() => {
+  //   fetch("http://localhost:5000/tasks")
+  //     .then((res) => res.json())
+  //     .then((data) => setTasks(data));
+  // }, []);
+  // console.log("tasks this: ", tasks);
+
   useEffect(() => {
-    fetch("http://localhost:5000/tasks")
-      .then((res) => res.json())
-      .then((data) => setTasks(data));
+    getTasks();
   }, []);
-  console.log("tasks: ", tasks);
+
+  const getTasks = () => {
+    return fetch("https://taskmate-backend.onrender.com/tasks")
+      .then((response) => response.json())
+      .then((data) => {
+        return setTasks(data);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
+  console.log("Tasks: ", tasks);
 
   const handleTaskCreation = () => {
     if (taskTitle.trim() === "") {
@@ -90,7 +106,9 @@ const HomeScreen = ({ navigation, route }) => {
           </TouchableOpacity>
         </View>
       </View>
-      {tasks && tasks.map((task) => <Accordion tasks={tasks} key={task.id} />)}
+      {tasks?.map((task) => (
+        <Accordion tasks={task} key={task.id} />
+      ))}
     </View>
   );
 };
