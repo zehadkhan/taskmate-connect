@@ -12,15 +12,12 @@ import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const HomeScreen = ({ navigation, route }) => {
-  // const gmail = route.params.sessionData.gmail;
-  // const gmail = route.params.dummyObject.gmail;
-  // const password = route.params.dummyObject.password;
   const [taskTitle, setTaskTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [assignTo, setAssignTo] = useState("");
   const [error, setError] = useState("");
   const [tasks, setTasks] = useState();
   const [userData, setUserData] = useState();
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     userDataFromAsyncStorage();
@@ -32,8 +29,6 @@ const HomeScreen = ({ navigation, route }) => {
       const userDataString = await AsyncStorage.getItem("userData");
       if (userDataString) {
         const userData = JSON.parse(userDataString);
-        // Here you can access userData and use it as needed
-        console.log("User Data from AsyncStorage:", userData);
         setUserData(userData);
       }
     } catch (error) {
@@ -51,21 +46,23 @@ const HomeScreen = ({ navigation, route }) => {
         console.error(error);
       });
   };
-  // console.log("Tasks: ", tasks);
 
   const handleTaskCreation = async () => {
-    if (taskTitle.trim() === "") {
-      setError("Please enter task title");
-      return;
-    }
-    if (description.trim() === "") {
-      setError("Please enter description");
-      return;
-    }
-    
-    // Reset error state
-    setError("");
     try {
+      if (taskTitle.trim() === "") {
+        setError("Please enter task title");
+        return;
+      }
+      if (description.trim() === "") {
+        setError("Please enter description");
+        return;
+      }
+      if (assignTo.trim() === "") {
+        setError("Please enter student's id");
+        return;
+      }
+      setError("");
+
       const response = await fetch(
         "https://taskmate-backend.onrender.com/tasks/create",
         {
@@ -76,25 +73,29 @@ const HomeScreen = ({ navigation, route }) => {
           body: JSON.stringify({
             title: taskTitle,
             description: description,
-            creatorId: userData.id, 
+            creatorId: userData.id,
+            assignUser: assignTo,
           }),
         }
       );
-  
+
       const data = await response.json();
-  
+
       if (!response.ok) {
-        setError(data.error || "Something went wrong");
-        return;
+        throw new Error(data.error || "Failed to create task");
       }
-      console.log("Task created: ", data);
+
+      setTaskTitle("");
+      setDescription("");
+      setAssignTo("");
+
+      getTasks();
     } catch (error) {
       console.error("Creating failed:", error);
       setError("Creating failed. Please try again.");
-    } finally {
-      setLoading(false);
     }
   };
+
   return (
     <ScrollView>
       {userData && (
@@ -119,16 +120,19 @@ const HomeScreen = ({ navigation, route }) => {
               numberOfLines={10}
               style={styles.detailsInput}
               placeholder="Description"
-              secureTextEntry
               value={description}
               onChangeText={setDescription}
             />
+            <TextInput
+              style={styles.textInput}
+              placeholder="Assign To"
+              value={assignTo}
+              onChangeText={setAssignTo}
+            />
+
             {error ? <Text style={styles.error}>{error}</Text> : null}
             <TouchableOpacity
-              onPress={() => {
-                // navigation.navigate("Home");
-                handleTaskCreation();
-              }}
+              onPress={handleTaskCreation}
               style={styles.buttonStyle}
             >
               <Text style={styles.buttonTextStyle}>Create</Text>
@@ -141,7 +145,7 @@ const HomeScreen = ({ navigation, route }) => {
         </View>
       )}
       {tasks?.map((task) => (
-        <Accordion tasks={task} key={task.id} />
+        <Accordion navigation={navigation} tasks={task} key={task.id} />
       ))}
     </ScrollView>
   );

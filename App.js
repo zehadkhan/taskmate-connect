@@ -15,6 +15,7 @@ import LoginScreen from "./components/LoginScreen";
 import SplashScreen from "./components/SplashScreen";
 import { useFonts, Inter_700Bold } from "@expo-google-fonts/inter";
 import SignUpScreen from "./components/SignUpScreen";
+import CompleteTaskScreen from "./components/CompleteTaskScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -65,6 +66,17 @@ export default function App() {
               component={SignUpScreen}
               options={{
                 title: "Sign Up",
+                headerStyle: {
+                  backgroundColor: "orange",
+                },
+                headerTintColor: "white",
+              }}
+            />
+            <Stack.Screen
+              name="CompleteTask"
+              component={CompleteTaskScreen}
+              options={{
+                title: "Complete Task",
                 headerStyle: {
                   backgroundColor: "orange",
                 },

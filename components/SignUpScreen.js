@@ -11,7 +11,7 @@ import {
 import { Picker } from "@react-native-picker/picker";
 import { useFonts, Inter_700Bold } from "@expo-google-fonts/inter";
 
-const SignUpScreen = ({ navigation, route }) => {
+const SignUpScreen = ({ navigation }) => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,31 +26,55 @@ const SignUpScreen = ({ navigation, route }) => {
     return <ActivityIndicator size="large" color="#00ff00" />;
   }
 
-  const handleSignUp = () => {
-    // Perform validation (e.g., check if username and password are not empty)
-    if (username.trim() === "") {
-      setError("Please enter username");
-      return;
+  const handleSignUp = async() => {
+    try {
+      if (username.trim() === "") {
+        setError("Please enter username");
+        return;
+      }
+      if (email.trim() === "") {
+        setError("Please enter email");
+        return;
+      }
+      if (password.trim() === "") {
+        setError("Please enter password");
+        return;
+      }
+      if (role.trim() === "") {
+        setError("Please enter role");
+        return;
+      }
+      // Reset error state
+      setError("");
+  
+      // Perform login logic (e.g., call an API to authenticate the user)
+      // For demonstration, we're just logging the username and password
+      console.log(username, email, password, role);
+      const response = await fetch("https://taskmate-backend.onrender.com/users/create",{
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userName: username,
+          email: email,
+          password: password,
+          role: role
+        }),
+      })
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to sign up");
+      }
+      setUsername("");
+      setEmail("");
+      setPassword("");
+      setRole("");
+    } catch (error) {
+      console.error("Creating failed:", error);
+      setError("Creating failed. Please try again.");
     }
-    if (email.trim() === "") {
-      setError("Please enter email");
-      return;
-    }
-    if (password.trim() === "") {
-      setError("Please enter password");
-      return;
-    }
-    if (role.trim() === "") {
-      setError("Please enter role");
-      return;
-    }
-
-    // Perform login logic (e.g., call an API to authenticate the user)
-    // For demonstration, we're just logging the username and password
-    console.log(username, email, password, role);
-
-    // Reset error state
-    setError("");
+    
   };
 
   return (

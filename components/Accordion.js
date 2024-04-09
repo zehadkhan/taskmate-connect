@@ -15,12 +15,59 @@ import {
   Inter_700Bold,
   Inter_400Regular,
 } from "@expo-google-fonts/inter";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const Accordion = ({ tasks }) => {
+const Accordion = ({ navigation, tasks }) => {
   const [open, setOpen] = useState(false);
   const [animation] = useState(new Animated.Value(0));
+  const [userData, setUserData] = useState();
+  const [error, setError] = useState("");
+  const taskId = tasks.id;
 
-  // console.log("accordion", tasks);
+  useEffect(() => {
+    userDataFromAsyncStorage();
+  }, []);
+  const userDataFromAsyncStorage = async () => {
+    try {
+      const userDataString = await AsyncStorage.getItem("userData");
+      if (userDataString) {
+        const userData = JSON.parse(userDataString);
+        setUserData(userData);
+      }
+    } catch (error) {
+      console.error("Error fetching data from AsyncStorage:", error);
+    }
+  };
+  const handleCompleteTask = async (taskId) => {
+    try {
+      const response = await fetch(
+        "https://taskmate-backend.onrender.com/completeTasks/create",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            complete: true,
+            taskId: taskId,
+            userId: userData?.id,
+          }),
+        }
+      );
+      const data = await response.json();
+      if (response.ok) {
+        Alert.alert("Task complete!");
+      }
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to complete task");
+      }
+    } catch (error) {
+      console.error("Completing failed:", error);
+      setError("Completing failed. Please try again.");
+    }
+  };
+
+ 
   //! This function is using for toggle the title
   const toggleAccordion = () => {
     if (!open) {
@@ -73,7 +120,10 @@ const Accordion = ({ tasks }) => {
           <Button
             title="Done"
             color="#f194ff"
-            onPress={() => Alert.alert("Task complete!")}
+            onPress={() => {
+              handleCompleteTask(taskId);
+              navigation.navigate("CompleteTask");
+            }}
           />
         </View>
       </Animated.View>
