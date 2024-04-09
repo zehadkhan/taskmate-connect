@@ -6,7 +6,12 @@ const SplashScreen = () => {
     "Inter-Bold": Inter_700Bold,
   });
   if (!fontsLoaded) {
-    return <ActivityIndicator size="large" color="#00ff00" />;
+    return (
+      <ActivityIndicator
+        size="large"
+        color="#00ff00"
+      />
+    );
   }
 
   return (

@@ -1,4 +1,3 @@
-
 import {
   TouchableWithoutFeedback,
   View,
@@ -17,12 +16,11 @@ import {
   Inter_400Regular,
 } from "@expo-google-fonts/inter";
 
-const Accordion = ({tasks}) => {
+const Accordion = ({ tasks }) => {
   const [open, setOpen] = useState(false);
   const [animation] = useState(new Animated.Value(0));
-  
-  
-  console.log('accordion', tasks);
+
+  // console.log("accordion", tasks);
   //! This function is using for toggle the title
   const toggleAccordion = () => {
     if (!open) {
@@ -113,4 +111,3 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
 });
-

@@ -163,12 +163,12 @@ import {
   View,
 } from "react-native";
 import { useFonts, Inter_700Bold } from "@expo-google-fonts/inter";
-import * as Cookies from 'expo-cookie';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const LoginScreen = ({ navigation }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   let [fontsLoaded] = useFonts({
@@ -177,54 +177,49 @@ const LoginScreen = ({ navigation }) => {
   if (!fontsLoaded) {
     return <ActivityIndicator size="large" color="#00ff00" />;
   }
-  const setCookie = async (data) => {
-    await Cookies.setAsync('accessToken', data.accessToken, {
-      domain: 'your-domain.com', // Set your domain here
-    });
-    // You can set more cookies if needed
-  };
 
-  const handleLogin = async () => { 
+  const handleLogin = async () => {
     // Perform validation (e.g., check if email and password are not empty)
-    if (email.trim() === '') {
-      setError('Please enter email');
+    if (email.trim() === "") {
+      setError("Please enter email");
       return;
     }
-    if (password.trim() === '') {
-      setError('Please enter password');
+    if (password.trim() === "") {
+      setError("Please enter password");
       return;
     }
 
     setLoading(true);
 
     try {
-      const response = await fetch('https://taskmate-backend.onrender.com/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email, 
-          password,
-        }),
-      });
+      const response = await fetch(
+        "https://taskmate-backend.onrender.com/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            password,
+          }),
+        }
+      );
 
       const data = await response.json();
+      await AsyncStorage.setItem("userData", JSON.stringify(data));
 
       if (!response.ok) {
-        setError(data.message || 'Something went wrong');
+        setError(data.message || "Something went wrong");
         return;
       }
-
-      if(response.ok){
-        await setCookie(data);
-      }
+      console.log("Login Response: ", data);
 
       // If login successful, navigate to Home screen
       navigation.navigate("Home");
     } catch (error) {
-      console.error('Login failed:', error);
-      setError('Login failed. Please try again.');
+      console.error("Login failed:", error);
+      setError("Login failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -266,7 +261,7 @@ const LoginScreen = ({ navigation }) => {
           </>
         )}
       </TouchableOpacity>
-      <Text style={{color: "red"}}>OR</Text>
+      <Text style={{ color: "red" }}>OR</Text>
       <TouchableOpacity
         onPress={() => {
           navigation.navigate("SignUp");
@@ -343,4 +338,3 @@ const styles = StyleSheet.create({
     resizeMode: "contain",
   },
 });
-
