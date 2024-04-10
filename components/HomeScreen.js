@@ -18,6 +18,7 @@ const HomeScreen = ({ navigation, route }) => {
   const [error, setError] = useState("");
   const [tasks, setTasks] = useState();
   const [userData, setUserData] = useState();
+  const [dedicatedTasks, setDedicatedTasks] = useState();
 
   useEffect(() => {
     userDataFromAsyncStorage();
@@ -46,6 +47,18 @@ const HomeScreen = ({ navigation, route }) => {
         console.error(error);
       });
   };
+
+  console.log("Tasks: ", tasks);
+  console.log("Task for student: ", dedicatedTasks);
+
+  useEffect(() => {
+    if(userData && tasks) {
+      const assignedTasks = tasks.filter(
+        (task) => parseInt(task.assignUser) === parseInt(userData.id)
+      )
+      setDedicatedTasks(assignedTasks);
+    }
+  }, [userData, tasks])
 
   const handleTaskCreation = async () => {
     try {
@@ -144,9 +157,14 @@ const HomeScreen = ({ navigation, route }) => {
           </View>
         </View>
       )}
-      {tasks?.map((task) => (
-        <Accordion navigation={navigation} tasks={task} key={task.id} />
-      ))}
+      {userData?.role === "teacher" &&
+        tasks?.map((task) => (
+          <Accordion navigation={navigation} tasks={task} key={task.id} />
+        ))}
+      {userData?.role === "student" &&
+        dedicatedTasks?.map((task) => (
+          <Accordion navigation={navigation} tasks={task} key={task.id} />
+        ))}
     </ScrollView>
   );
 };
