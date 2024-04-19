@@ -66,7 +66,7 @@ const CompleteTaskScreen = () => {
           </View>
         ))
       ) : (
-        <Text>No completed tasks found for the current user.</Text>
+        <Text>Loading.</Text>
       )}
     </ScrollView>
   );

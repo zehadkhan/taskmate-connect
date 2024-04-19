@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   View,
   ScrollView,
+  Button,
 } from "react-native";
 import Accordion from "./Accordion";
 import { useEffect, useState } from "react";
@@ -155,12 +156,38 @@ const HomeScreen = ({ navigation, route }) => {
               />
             </TouchableOpacity>
           </View>
+          {(
+            <View style={{ marginLeft: 50, marginTop: 10, paddingLeft: 0, marginBottom:20, width:300}}>
+              <Button
+                onPress={() => {
+                  navigation.navigate("CompleteTask");
+                }}
+                title="Show Completed Task"
+                color="#841584"
+                accessibilityLabel="View Completed Tasks"
+              />
+            
+            </View>
+          )}
+
+        <View style={{ marginHorizontal: 10, marginTop: 10, marginBottom: 20 }}>
+          <View style={{ 
+            borderTopWidth: 1, borderBottomWidth: 1, 
+            borderTopColor: 'black', borderBottomColor: 'black', 
+            paddingVertical: 5 }}>
+            <Text style={{ fontWeight: 'bold', fontSize: 20, textAlign: 'center' }}>List Of All Tasks:</Text>
+          </View>
+        </View>
+
+
         </View>
       )}
       {userData?.role === "teacher" &&
-        tasks?.map((task) => (
-          <Accordion navigation={navigation} tasks={task} key={task.id} />
-        ))}
+         tasks
+         ?.filter(task => !task.completed) // Filter out completed tasks
+         .map((task) => (
+           <Accordion navigation={navigation} tasks={task} key={task.id} />
+         ))}
       {userData?.role === "student" &&
         dedicatedTasks?.map((task) => (
           <Accordion navigation={navigation} tasks={task} key={task.id} />
