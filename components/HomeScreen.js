@@ -11,6 +11,8 @@ import {
 import Accordion from "./Accordion";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SelectList } from 'react-native-dropdown-select-list'
+// import notifee from '@notifee/react-native';
 
 const HomeScreen = ({ navigation, route }) => {
   const [taskTitle, setTaskTitle] = useState("");
@@ -48,10 +50,16 @@ const HomeScreen = ({ navigation, route }) => {
         console.error(error);
       });
   };
+  const filterdTasks = tasks.filter(task => task.CompleteTasks.length > 0).map(task => 
+    console.log(task));
 
-  console.log("Tasks: ", tasks);
-  console.log("Task for student: ", dedicatedTasks);
 
+
+
+
+  // console.log("Tasks: ", tasks);
+  // console.log("Task for student: ", dedicatedTasks);
+  // console.log(tasks);
   useEffect(() => {
     if(userData && tasks) {
       const assignedTasks = tasks.filter(
@@ -162,13 +170,17 @@ const HomeScreen = ({ navigation, route }) => {
                 onPress={() => {
                   navigation.navigate("CompleteTask");
                 }}
-                title="Show Completed Task"
+                title="Show Completed Tasks"
                 color="#841584"
                 accessibilityLabel="View Completed Tasks"
               />
-            
             </View>
           )}
+          {/* {(
+            <View>
+              <Button title="Display Notification" onPress={() => {}} />
+            </View>
+          )} */}
 
         <View style={{ marginHorizontal: 10, marginTop: 10, marginBottom: 20 }}>
           <View style={{ 
@@ -182,17 +194,26 @@ const HomeScreen = ({ navigation, route }) => {
 
         </View>
       )}
-      {userData?.role === "teacher" &&
-         tasks
-         ?.filter(task => !task.completed) // Filter out completed tasks
-         .map((task) => (
-           <Accordion navigation={navigation} tasks={task} key={task.id} />
-         ))}
-      {userData?.role === "student" &&
-        dedicatedTasks?.map((task) => (
-          <Accordion navigation={navigation} tasks={task} key={task.id} />
-        ))}
+      {userData?.role === "teacher" && tasks && (
+        <>
+          {tasks
+             // Filter out completed tasks
+            .map((task) => (
+              <Accordion navigation={navigation} tasks={task} key={task.id} />
+            ))}
+        </>
+      )}
+      {userData?.role === "student" && dedicatedTasks && (
+        <>
+          <p>Number of tasks: {dedicatedTasks.length}</p>
+          {dedicatedTasks.map((task) => (
+            <Accordion navigation={navigation} tasks={task} key={task.id} />
+          ))}
+        </>
+      )}
     </ScrollView>
+
+    
   );
 };
 
