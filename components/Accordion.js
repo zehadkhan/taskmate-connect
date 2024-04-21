@@ -39,8 +39,9 @@ const Accordion = ({ navigation, tasks }) => {
     }
   };
   const handleCompleteTask = async (taskId) => {
+    console.log("Task ID: ", taskId);
     try {
-      const response = await fetch(
+      const responseCompleteTasks = await fetch(
         "https://taskmate-backend.onrender.com/completeTasks/create",
         {
           method: "POST",
@@ -54,20 +55,42 @@ const Accordion = ({ navigation, tasks }) => {
           }),
         }
       );
-      const data = await response.json();
-      if (response.ok) {
-        Alert.alert("Task complete!");
+      const responseCompleteTasksData = await responseCompleteTasks.json();
+      
+      if (!responseCompleteTasks.ok) {
+        throw new Error(
+          responseCompleteTasksData.error || "Failed to complete task"
+        );
       }
+  
+      const response = await fetch(
+        `https://taskmate-backend.onrender.com/tasks/${taskId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            completeTaskStatus: true,
+          }),
+        }
+      );
+      const data = await response.json();
+      
       if (!response.ok) {
         throw new Error(data.error || "Failed to complete task");
       }
+  
+      // If both API calls succeed, show success message
+      Alert.alert("Task complete!");
+      
     } catch (error) {
       console.error("Completing failed:", error);
       setError("Completing failed. Please try again.");
     }
   };
+  
 
- 
   //! This function is using for toggle the title
   const toggleAccordion = () => {
     if (!open) {

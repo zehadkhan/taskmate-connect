@@ -50,8 +50,8 @@ const HomeScreen = ({ navigation, route }) => {
         console.error(error);
       });
   };
-  const filterdTasks = tasks.filter(task => task.CompleteTasks.length > 0).map(task => 
-    console.log(task));
+  // const filterdTasks = tasks.filter(task => task.CompleteTasks.length > 0).map(task => 
+  //   console.log(task));
 
 
 
@@ -205,7 +205,7 @@ const HomeScreen = ({ navigation, route }) => {
       )}
       {userData?.role === "student" && dedicatedTasks && (
         <>
-          <p>Number of tasks: {dedicatedTasks.length}</p>
+          {/* <p>Number of tasks: {dedicatedTasks.length}</p> */}
           {dedicatedTasks.map((task) => (
             <Accordion navigation={navigation} tasks={task} key={task.id} />
           ))}
