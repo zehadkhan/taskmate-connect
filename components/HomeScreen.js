@@ -7,17 +7,19 @@ import {
   View,
   ScrollView,
   Button,
+  
 } from "react-native";
+import { Picker } from "@react-native-picker/picker";
 import Accordion from "./Accordion";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { SelectList } from "react-native-dropdown-select-list";
+// import { SelectList } from "react-native-dropdown-select-list";
 // import notifee from '@notifee/react-native';
 
 const HomeScreen = ({ navigation, route }) => {
   const [taskTitle, setTaskTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [assignTo, setAssignTo] = useState("");
+  const [assignTo, setAssignTo] = useState(null);
   const [error, setError] = useState("");
   const [tasks, setTasks] = useState();
   const [userData, setUserData] = useState();
@@ -26,9 +28,13 @@ const HomeScreen = ({ navigation, route }) => {
   const [userTasksAfterChangeStatus, setUserTasksAfterChangeStatus] =
     useState(null);
 
+  const [getUser, setGetUser] = useState();
+  const [assignValue, setAssignValue] = useState();
+
   useEffect(() => {
     userDataFromAsyncStorage();
     getTasks();
+    getUsers();
   }, []);
 
   const userDataFromAsyncStorage = async () => {
@@ -42,6 +48,35 @@ const HomeScreen = ({ navigation, route }) => {
       console.error("Error fetching data from AsyncStorage:", error);
     }
   };
+
+  const getUsers = async () => {
+    try {
+      const response = await fetch(
+        "https://taskmate-backend.onrender.com/users"
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch tasks");
+      }
+      const data = await response.json();
+      if (data == undefined) {
+        return data;
+      } else {
+        setGetUser(data);
+      }
+    } catch (error) {
+      console.error("Error fetching students:", error);
+    }
+  };
+  console.log("Students: ", getUser);
+
+  useEffect(() => {
+    if (userData && getUser) {
+      const studentUser = getUser.filter((role) => role.role === "student");
+      setAssignValue(studentUser);
+    }
+  }, [userData, getUser]);
+
+  console.log("Student User: ", assignValue);
 
   const getTasks = async () => {
     try {
@@ -62,41 +97,12 @@ const HomeScreen = ({ navigation, route }) => {
     }
   };
 
-  // const filteredTasks = tasks.filter(
-  //   (task) => task.completeTaskStatus === true
-  // );
-  // console.log("Filter Data: ", filteredTasks);
-
-  // const filteredTasks = tasks && tasks.filter(
-  //   (task) => task.completeTaskStatus === true
-  // );
-
-  /*
-  if(tasks){
-    const filteredTasks =  tasks.filter(
-      (task) => task.completeTaskStatus === true
-    )
-    console.log("Filter Data: ", filteredTasks);
-
-    const arrayDiffByProperty = (arr1, arr2, property) => {
-      return arr1.filter(
-        (item1) => !arr2.some((item2) => item2[property] === item1[property])
-      );
-    };
-  
-    const tasksAfterChangeStatus = arrayDiffByProperty(tasks, filteredTasks, "id");
-    console.log("tasksAfterChangeStatus: ", tasksAfterChangeStatus);
-    return tasksAfterChangeStatus;
-  }
-
-  console.log("object: ", tasksAfterChangeStatus);
-  */
   useEffect(() => {
     if (tasks) {
       const filteredTasks = tasks.filter(
         (task) => task.completeTaskStatus === true
       );
-      console.log("Filter Data: ", filteredTasks);
+      //! console.log("Filter Data: ", filteredTasks);
 
       const arrayDiffByProperty = (arr1, arr2, property) => {
         return arr1.filter(
@@ -116,10 +122,6 @@ const HomeScreen = ({ navigation, route }) => {
 
   //! console.log("object: ", tasksAfterChangeStatus);
 
-  // console.log("Tasks: ", tasks);
-  // console.log("Task for student: ", dedicatedTasks);
-  // console.log(tasks);
-
   useEffect(() => {
     if (userData && tasks) {
       const assignedTasks = tasks.filter(
@@ -129,9 +131,7 @@ const HomeScreen = ({ navigation, route }) => {
     }
   }, [userData, tasks]);
 
-  console.log("Dedicated task for student full Array A: ", dedicatedTasks);
-
-  //! Try
+  //! console.log("Dedicated task for student full Array A: ", dedicatedTasks);
 
   useEffect(() => {
     if (userData?.role === "student" && dedicatedTasks) {
@@ -140,7 +140,7 @@ const HomeScreen = ({ navigation, route }) => {
           studentTask.assignUser === userData.id &&
           studentTask.completeTaskStatus === true
       );
-      console.log("Filter Data for student Array B: ", studentFilteredTasks);
+      //! console.log("Filter Data for student Array B: ", studentFilteredTasks);
 
       const arrayDiffByProperty = (arr1, arr2, property) => {
         return arr1.filter(
@@ -157,10 +157,7 @@ const HomeScreen = ({ navigation, route }) => {
     }
   }, [userData, dedicatedTasks]);
 
-  console.log(
-    "User task for student result array C : ",
-    userTasksAfterChangeStatus
-  );
+  //! console.log("User task for student result array C : ", userTasksAfterChangeStatus);
 
   const handleTaskCreation = async () => {
     try {
@@ -172,10 +169,7 @@ const HomeScreen = ({ navigation, route }) => {
         setError("Please enter description");
         return;
       }
-      if (assignTo.trim() === "") {
-        setError("Please enter student's id");
-        return;
-      }
+      
       setError("");
 
       const response = await fetch(
@@ -259,12 +253,26 @@ const HomeScreen = ({ navigation, route }) => {
               value={description}
               onChangeText={setDescription}
             />
-            <TextInput
+            {/* <TextInput
               style={styles.textInput}
               placeholder="Assign To"
               value={assignTo}
               onChangeText={setAssignTo}
-            />
+            /> */}
+
+            <Picker
+              selectedValue={assignTo}
+              onValueChange={(itemValue) => setAssignTo(itemValue)}
+            >
+              <Picker.Item label="Select Student" value="" />
+              {assignValue?.map((user) => (
+                <Picker.Item
+                  key={user.id}
+                  label={user.userName + " : " +  user.id}
+                  value={user.id}
+                />
+              ))}
+            </Picker>
 
             {error ? <Text style={styles.error}>{error}</Text> : null}
             <TouchableOpacity
