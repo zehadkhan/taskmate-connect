@@ -11,7 +11,7 @@ import {
 import Accordion from "./Accordion";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { SelectList } from 'react-native-dropdown-select-list'
+import { SelectList } from "react-native-dropdown-select-list";
 // import notifee from '@notifee/react-native';
 
 const HomeScreen = ({ navigation, route }) => {
@@ -22,6 +22,9 @@ const HomeScreen = ({ navigation, route }) => {
   const [tasks, setTasks] = useState();
   const [userData, setUserData] = useState();
   const [dedicatedTasks, setDedicatedTasks] = useState();
+  const [tasksAfterChangeStatus, setTasksAfterChangeStatus] = useState(null);
+  const [userTasksAfterChangeStatus, setUserTasksAfterChangeStatus] =
+    useState(null);
 
   useEffect(() => {
     userDataFromAsyncStorage();
@@ -40,34 +43,124 @@ const HomeScreen = ({ navigation, route }) => {
     }
   };
 
-  const getTasks = () => {
-    return fetch("https://taskmate-backend.onrender.com/tasks")
-      .then((response) => response.json())
-      .then((data) => {
-        return setTasks(data);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+  const getTasks = async () => {
+    try {
+      const response = await fetch(
+        "https://taskmate-backend.onrender.com/tasks"
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch tasks");
+      }
+      const data = await response.json();
+      if (data == undefined) {
+        return data;
+      } else {
+        setTasks(data);
+      }
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+    }
   };
-  // const filterdTasks = tasks.filter(task => task.CompleteTasks.length > 0).map(task => 
-  //   console.log(task));
 
+  // const filteredTasks = tasks.filter(
+  //   (task) => task.completeTaskStatus === true
+  // );
+  // console.log("Filter Data: ", filteredTasks);
 
+  // const filteredTasks = tasks && tasks.filter(
+  //   (task) => task.completeTaskStatus === true
+  // );
 
+  /*
+  if(tasks){
+    const filteredTasks =  tasks.filter(
+      (task) => task.completeTaskStatus === true
+    )
+    console.log("Filter Data: ", filteredTasks);
 
+    const arrayDiffByProperty = (arr1, arr2, property) => {
+      return arr1.filter(
+        (item1) => !arr2.some((item2) => item2[property] === item1[property])
+      );
+    };
+  
+    const tasksAfterChangeStatus = arrayDiffByProperty(tasks, filteredTasks, "id");
+    console.log("tasksAfterChangeStatus: ", tasksAfterChangeStatus);
+    return tasksAfterChangeStatus;
+  }
+
+  console.log("object: ", tasksAfterChangeStatus);
+  */
+  useEffect(() => {
+    if (tasks) {
+      const filteredTasks = tasks.filter(
+        (task) => task.completeTaskStatus === true
+      );
+      console.log("Filter Data: ", filteredTasks);
+
+      const arrayDiffByProperty = (arr1, arr2, property) => {
+        return arr1.filter(
+          (item1) => !arr2.some((item2) => item2[property] === item1[property])
+        );
+      };
+
+      const tasksAfterChangeStatus = arrayDiffByProperty(
+        tasks,
+        filteredTasks,
+        "id"
+      );
+      //! console.log("tasksAfterChangeStatus: ", tasksAfterChangeStatus);
+      setTasksAfterChangeStatus(tasksAfterChangeStatus); // Set the value
+    }
+  }, [tasks]);
+
+  //! console.log("object: ", tasksAfterChangeStatus);
 
   // console.log("Tasks: ", tasks);
   // console.log("Task for student: ", dedicatedTasks);
   // console.log(tasks);
+
   useEffect(() => {
-    if(userData && tasks) {
+    if (userData && tasks) {
       const assignedTasks = tasks.filter(
         (task) => parseInt(task.assignUser) === parseInt(userData.id)
-      )
+      );
       setDedicatedTasks(assignedTasks);
     }
-  }, [userData, tasks])
+  }, [userData, tasks]);
+
+  console.log("Dedicated task for student full Array A: ", dedicatedTasks);
+
+  //! Try
+
+  useEffect(() => {
+    if (userData?.role === "student" && dedicatedTasks) {
+      const studentFilteredTasks = dedicatedTasks.filter(
+        (studentTask) =>
+          studentTask.assignUser === userData.id &&
+          studentTask.completeTaskStatus === true
+      );
+      console.log("Filter Data for student Array B: ", studentFilteredTasks);
+
+      const arrayDiffByProperty = (arr1, arr2, property) => {
+        return arr1.filter(
+          (item1) => !arr2.some((item2) => item2[property] === item1[property])
+        );
+      };
+
+      const tasksAfterChangeStatus = arrayDiffByProperty(
+        dedicatedTasks,
+        studentFilteredTasks,
+        "id"
+      );
+      setUserTasksAfterChangeStatus(tasksAfterChangeStatus); // Set the value
+    }
+  }, [userData, dedicatedTasks]);
+
+  console.log(
+    "User task for student result array C : ",
+    userTasksAfterChangeStatus
+  );
 
   const handleTaskCreation = async () => {
     try {
@@ -128,6 +221,27 @@ const HomeScreen = ({ navigation, route }) => {
         </View>
       )}
 
+      {
+        <View
+          style={{
+            marginLeft: 50,
+            marginTop: 10,
+            paddingLeft: 0,
+            marginBottom: 20,
+            width: 300,
+          }}
+        >
+          <Button
+            onPress={() => {
+              navigation.navigate("CompleteTask");
+            }}
+            title="Show Completed Tasks"
+            color="#841584"
+            accessibilityLabel="View Completed Tasks"
+          />
+        </View>
+      }
+
       {userData?.role === "teacher" && (
         <View style={{ backgroundColor: "#fff" }}>
           <View style={{ margin: 15 }}>
@@ -164,56 +278,56 @@ const HomeScreen = ({ navigation, route }) => {
               />
             </TouchableOpacity>
           </View>
-          {(
-            <View style={{ marginLeft: 50, marginTop: 10, paddingLeft: 0, marginBottom:20, width:300}}>
-              <Button
-                onPress={() => {
-                  navigation.navigate("CompleteTask");
-                }}
-                title="Show Completed Tasks"
-                color="#841584"
-                accessibilityLabel="View Completed Tasks"
-              />
-            </View>
-          )}
+
           {/* {(
             <View>
               <Button title="Display Notification" onPress={() => {}} />
             </View>
           )} */}
 
-        <View style={{ marginHorizontal: 10, marginTop: 10, marginBottom: 20 }}>
-          <View style={{ 
-            borderTopWidth: 1, borderBottomWidth: 1, 
-            borderTopColor: 'black', borderBottomColor: 'black', 
-            paddingVertical: 5 }}>
-            <Text style={{ fontWeight: 'bold', fontSize: 20, textAlign: 'center' }}>List Of All Tasks:</Text>
+          <View
+            style={{ marginHorizontal: 10, marginTop: 10, marginBottom: 20 }}
+          >
+            <View
+              style={{
+                borderTopWidth: 1,
+                borderBottomWidth: 1,
+                borderTopColor: "black",
+                borderBottomColor: "black",
+                paddingVertical: 5,
+              }}
+            >
+              <Text
+                style={{
+                  fontWeight: "bold",
+                  fontSize: 20,
+                  textAlign: "center",
+                }}
+              >
+                List Of All Tasks:
+              </Text>
+            </View>
           </View>
         </View>
-
-
-        </View>
       )}
-      {userData?.role === "teacher" && tasks && (
+      {userData?.role === "teacher" && tasksAfterChangeStatus && (
         <>
-          {tasks
-             // Filter out completed tasks
+          {tasksAfterChangeStatus
+            // Filter out completed tasks
             .map((task) => (
               <Accordion navigation={navigation} tasks={task} key={task.id} />
             ))}
         </>
       )}
-      {userData?.role === "student" && dedicatedTasks && (
+      {userData?.role === "student" && userTasksAfterChangeStatus && (
         <>
           {/* <p>Number of tasks: {dedicatedTasks.length}</p> */}
-          {dedicatedTasks.map((task) => (
+          {userTasksAfterChangeStatus.map((task) => (
             <Accordion navigation={navigation} tasks={task} key={task.id} />
           ))}
         </>
       )}
     </ScrollView>
-
-    
   );
 };
 

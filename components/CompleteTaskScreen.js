@@ -23,6 +23,11 @@ const CompleteTaskScreen = () => {
       setUserCompletedTasks(completedTasks);
     }
   }, [userData, tasks]);
+  useEffect(() => {
+    if (userData?.role === "teacher" && tasks) {
+      setUserCompletedTasks(tasks);
+    }
+  }, [userData, tasks]);
   
 
   const userDataFromAsyncStorage = async () => {
@@ -66,7 +71,7 @@ const CompleteTaskScreen = () => {
           </View>
         ))
       ) : (
-        <Text>Loading.</Text>
+        <Text>No data found</Text>
       )}
     </ScrollView>
   );
