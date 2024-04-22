@@ -30,12 +30,13 @@ const HomeScreen = ({ navigation, route }) => {
 
   const [getUser, setGetUser] = useState();
   const [assignValue, setAssignValue] = useState();
+  
 
   useEffect(() => {
     userDataFromAsyncStorage();
     getTasks();
     getUsers();
-  }, []);
+  }, [tasks]);
 
   const userDataFromAsyncStorage = async () => {
     try {

@@ -56,13 +56,13 @@ const Accordion = ({ navigation, tasks }) => {
         }
       );
       const responseCompleteTasksData = await responseCompleteTasks.json();
-      
+
       if (!responseCompleteTasks.ok) {
         throw new Error(
           responseCompleteTasksData.error || "Failed to complete task"
         );
       }
-  
+
       const response = await fetch(
         `https://taskmate-backend.onrender.com/tasks/${taskId}`,
         {
@@ -76,20 +76,38 @@ const Accordion = ({ navigation, tasks }) => {
         }
       );
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || "Failed to complete task");
       }
-  
-      // If both API calls succeed, show success message
+
       Alert.alert("Task complete!");
-      
     } catch (error) {
       console.error("Completing failed:", error);
       setError("Completing failed. Please try again.");
     }
   };
-  
+
+  const handleDeleteTask = async (taskId) => {
+    try {
+      const response = await fetch(
+        `https://taskmate-backend.onrender.com/tasks/${taskId}`,
+        {
+          method: "DELETE",
+        }
+      );
+      if (response.ok) {
+        Alert.alert("Task deleted!");
+      } else {
+        console.error(
+          "Failed to delete task. Server responded with status:",
+          response.status
+        );
+      }
+    } catch (error) {
+      console.error("Can't delete task", error);
+    }
+  };
 
   //! This function is using for toggle the title
   const toggleAccordion = () => {
@@ -138,17 +156,27 @@ const Accordion = ({ navigation, tasks }) => {
         style={[styles.content, { height: heightAnimationInterpolation }]}
       >
         <Text style={styles.details}>{tasks?.description}</Text>
-
         <View style={styles.buttonStyle}>
           <Button
             title="Done"
-            color="#f194ff"
+            color="green"
             onPress={() => {
               handleCompleteTask(taskId);
               navigation.navigate("CompleteTask");
             }}
           />
         </View>
+        {userData?.role === "teacher" && (
+          <View style={styles.buttonStyle}>
+            <Button
+              title="Delete"
+              color="red"
+              onPress={() => {
+                handleDeleteTask(taskId);
+              }}
+            />
+          </View>
+        )}
       </Animated.View>
     </View>
   );
