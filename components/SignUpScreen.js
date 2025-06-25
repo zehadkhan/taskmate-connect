@@ -472,6 +472,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#333",
     paddingVertical: 16,
+    backgroundColor: "#fff",
   },
   passwordToggle: {
     padding: 4,

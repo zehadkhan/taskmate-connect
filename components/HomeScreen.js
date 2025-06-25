@@ -49,7 +49,7 @@ const HomeScreen = ({ navigation, route }) => {
     userDataFromAsyncStorage();
     getTasks();
     getUsers();
-  }, [tasks]);
+  }, []);
 
   const userDataFromAsyncStorage = async () => {
     try {
