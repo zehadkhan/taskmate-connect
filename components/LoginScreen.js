@@ -55,8 +55,6 @@ const LoginScreen = ({ navigation }) => {
         return;
       }
       
-      console.log("Login Response: ", data);
-      
       await AsyncStorage.setItem("userData", JSON.stringify(data));
       navigation.navigate("Home");
     } catch (error) {

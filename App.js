@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import {
   ActivityIndicator,
@@ -21,53 +22,103 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   const [person, setPerson] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
   let [fontsLoaded] = useFonts({
     "Inter-Bold": Inter_700Bold,
   });
-  if (!fontsLoaded) {
-    return <ActivityIndicator size="large" color="#00ff00" />;
-  }
+
+  // Check for existing login data when app starts
+  useEffect(() => {
+    checkLoginStatus();
+  }, []);
+
+  const checkLoginStatus = async () => {
+    try {
+      const userData = await AsyncStorage.getItem("userData");
+      if (userData) {
+        const parsedUserData = JSON.parse(userData);
+        if (parsedUserData && (parsedUserData.user || parsedUserData.id)) {
+          setIsLoggedIn(true);
+        }
+      }
+    } catch (error) {
+      console.error("Error checking login status:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleStart = () => {
     setPerson(true);
   };
 
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem("userData");
+      setIsLoggedIn(false);
+      setPerson(false);
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
+
+  // Show loading screen while checking login status
+  if (!fontsLoaded || isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#FF6B35" />
+        <Text style={styles.loadingText}>Loading TaskMate...</Text>
+      </View>
+    );
+  }
+
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        {!person ? (
+        {!person && !isLoggedIn ? (
           <Stack.Screen
             name="Splash"
             component={SplashScreen}
             options={{ headerShown: false }}
           />
-        ) : (
+        ) : !isLoggedIn ? (
           <Stack.Screen
             name="Login"
             component={LoginScreen}
             options={{ headerShown: false }}
           />
+        ) : null}
+        
+        {isLoggedIn && (
+          <Stack.Screen
+            name="Home"
+            component={HomeScreen}
+            options={{
+              title: "Home",
+              headerStyle: {
+                backgroundColor: "#FF6B35",
+              },
+              headerTintColor: "white",
+              headerRight: () => (
+                <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+                  <Text style={styles.logoutText}>Logout</Text>
+                </TouchableOpacity>
+              ),
+            }}
+          />
         )}
-        {person && (
+        
+        {person && !isLoggedIn && (
           <>
-            <Stack.Screen
-              name="Home"
-              component={HomeScreen}
-              options={{
-                title: "Home",
-                headerStyle: {
-                  backgroundColor: "orange",
-                },
-                headerTintColor: "white",
-              }}
-            />
             <Stack.Screen
               name="SignUp"
               component={SignUpScreen}
               options={{
                 title: "Sign Up",
                 headerStyle: {
-                  backgroundColor: "orange",
+                  backgroundColor: "#FF6B35",
                 },
                 headerTintColor: "white",
               }}
@@ -78,7 +129,7 @@ export default function App() {
               options={{
                 title: "Complete Task",
                 headerStyle: {
-                  backgroundColor: "orange",
+                  backgroundColor: "#FF6B35",
                 },
                 headerTintColor: "white",
               }}
@@ -86,7 +137,8 @@ export default function App() {
           </>
         )}
       </Stack.Navigator>
-      {!person && (
+      
+      {!person && !isLoggedIn && (
         <View style={styles.container}>
           <TouchableOpacity onPress={handleStart} style={styles.buttonStyle}>
             <Text style={styles.buttonTextStyle}>Start</Text>
@@ -102,6 +154,18 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f8f9fa",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#666",
+    fontWeight: "500",
+  },
   container: {
     flex: 1,
     justifyContent: "center",
@@ -128,5 +192,17 @@ const styles = StyleSheet.create({
     width: 15,
     height: 15,
     resizeMode: "contain",
+  },
+  logoutButton: {
+    marginRight: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 6,
+  },
+  logoutText: {
+    color: "white",
+    fontSize: 14,
+    fontWeight: "500",
   },
 });

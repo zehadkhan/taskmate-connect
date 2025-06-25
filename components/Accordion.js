@@ -19,7 +19,7 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BASE_URL } from '@env';
 
-const Accordion = ({ navigation, tasks }) => {
+const Accordion = ({ navigation, tasks, onStatusChange }) => {
   const [open, setOpen] = useState(false);
   const [animation] = useState(new Animated.Value(0));
   const [userData, setUserData] = useState();
@@ -43,7 +43,6 @@ const Accordion = ({ navigation, tasks }) => {
   };
 
   const handleCompleteTask = async (taskId) => {
-    console.log("Task ID: ", taskId);
     try {
       const responseCompleteTasks = await fetch(`${BASE_URL}completeTasks/create`, {
         method: "POST",
@@ -113,6 +112,27 @@ const Accordion = ({ navigation, tasks }) => {
         },
       ]
     );
+  };
+
+  const handleStatusChange = async (taskId, newStatus) => {
+    try {
+      const response = await fetch(`${BASE_URL}tasks/${taskId}/status`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update task status");
+      }
+
+      // Update the task status in the parent component
+      onStatusChange(taskId, newStatus);
+    } catch (error) {
+      console.error("Error updating task status:", error);
+    }
   };
 
   const toggleAccordion = () => {

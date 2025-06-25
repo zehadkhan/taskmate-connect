@@ -56,9 +56,7 @@ const HomeScreen = ({ navigation, route }) => {
 
   const getUsers = async () => {
     try {
-      const response = await fetch(
-        `${BASE_URL}users`
-      );
+      const response = await fetch(`${BASE_URL}users`);
       if (!response.ok) {
         throw new Error("Failed to fetch users");
       }
@@ -72,7 +70,6 @@ const HomeScreen = ({ navigation, route }) => {
       console.error("Error fetching users:", error);
     }
   };
-  console.log("Students: ", getUser);
 
   useEffect(() => {
     if (userData && getUser) {
@@ -84,13 +81,9 @@ const HomeScreen = ({ navigation, route }) => {
     }
   }, [userData, getUser]);
 
-  console.log("Student User: ", assignValue);
-
   const getTasks = async () => {
     try {
-      const response = await fetch(
-        `${BASE_URL}tasks`
-      );
+      const response = await fetch(`${BASE_URL}tasks`);
       if (!response.ok) {
         throw new Error("Failed to fetch tasks");
       }
