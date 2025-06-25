@@ -9,6 +9,7 @@ import {
   Button,
   
 } from "react-native";
+import { BASE_URL } from '@env';
 import { Picker } from "@react-native-picker/picker";
 import Accordion from "./Accordion";
 import { useEffect, useState } from "react";
@@ -30,7 +31,7 @@ const HomeScreen = ({ navigation, route }) => {
 
   const [getUser, setGetUser] = useState();
   const [assignValue, setAssignValue] = useState();
-  
+
 
   useEffect(() => {
     userDataFromAsyncStorage();
@@ -43,7 +44,7 @@ const HomeScreen = ({ navigation, route }) => {
       const userDataString = await AsyncStorage.getItem("userData");
       if (userDataString) {
         const userData = JSON.parse(userDataString);
-        setUserData(userData);
+        setUserData(userData.user || userData); // Handle both formats
       }
     } catch (error) {
       console.error("Error fetching data from AsyncStorage:", error);
@@ -53,7 +54,7 @@ const HomeScreen = ({ navigation, route }) => {
   const getUsers = async () => {
     try {
       const response = await fetch(
-        "https://taskmate-backend.onrender.com/users"
+        `${BASE_URL}users`
       );
       if (!response.ok) {
         throw new Error("Failed to fetch tasks");
@@ -72,7 +73,10 @@ const HomeScreen = ({ navigation, route }) => {
 
   useEffect(() => {
     if (userData && getUser) {
-      const studentUser = getUser.filter((role) => role.role === "student");
+      // Handle both uppercase and lowercase role values
+      const studentUser = getUser.filter((user) => 
+        user.role === "STUDENT" || user.role === "student"
+      );
       setAssignValue(studentUser);
     }
   }, [userData, getUser]);
@@ -82,7 +86,7 @@ const HomeScreen = ({ navigation, route }) => {
   const getTasks = async () => {
     try {
       const response = await fetch(
-        "https://taskmate-backend.onrender.com/tasks"
+        `${BASE_URL}tasks`
       );
       if (!response.ok) {
         throw new Error("Failed to fetch tasks");
@@ -101,9 +105,8 @@ const HomeScreen = ({ navigation, route }) => {
   useEffect(() => {
     if (tasks) {
       const filteredTasks = tasks.filter(
-        (task) => task.completeTaskStatus === true
+        (task) => task.status === "COMPLETED"
       );
-      //! console.log("Filter Data: ", filteredTasks);
 
       const arrayDiffByProperty = (arr1, arr2, property) => {
         return arr1.filter(
@@ -116,32 +119,26 @@ const HomeScreen = ({ navigation, route }) => {
         filteredTasks,
         "id"
       );
-      //! console.log("tasksAfterChangeStatus: ", tasksAfterChangeStatus);
       setTasksAfterChangeStatus(tasksAfterChangeStatus); // Set the value
     }
   }, [tasks]);
 
-  //! console.log("object: ", tasksAfterChangeStatus);
-
   useEffect(() => {
     if (userData && tasks) {
       const assignedTasks = tasks.filter(
-        (task) => parseInt(task.assignUser) === parseInt(userData.id)
+        (task) => task.assigneeId === parseInt(userData.id)
       );
       setDedicatedTasks(assignedTasks);
     }
   }, [userData, tasks]);
 
-  //! console.log("Dedicated task for student full Array A: ", dedicatedTasks);
-
   useEffect(() => {
-    if (userData?.role === "student" && dedicatedTasks) {
+    if (userData && (userData?.role === "STUDENT" || userData?.role === "student") && dedicatedTasks) {
       const studentFilteredTasks = dedicatedTasks.filter(
         (studentTask) =>
-          studentTask.assignUser === userData.id &&
-          studentTask.completeTaskStatus === true
+          studentTask.assigneeId === parseInt(userData.id) &&
+          studentTask.status === "COMPLETED"
       );
-      //! console.log("Filter Data for student Array B: ", studentFilteredTasks);
 
       const arrayDiffByProperty = (arr1, arr2, property) => {
         return arr1.filter(
@@ -158,8 +155,6 @@ const HomeScreen = ({ navigation, route }) => {
     }
   }, [userData, dedicatedTasks]);
 
-  //! console.log("User task for student result array C : ", userTasksAfterChangeStatus);
-
   const handleTaskCreation = async () => {
     try {
       if (taskTitle.trim() === "") {
@@ -170,11 +165,11 @@ const HomeScreen = ({ navigation, route }) => {
         setError("Please enter description");
         return;
       }
-      
+
       setError("");
 
       const response = await fetch(
-        "https://taskmate-backend.onrender.com/tasks/create",
+        `${BASE_URL}tasks/create`,
         {
           method: "POST",
           headers: {
@@ -184,7 +179,7 @@ const HomeScreen = ({ navigation, route }) => {
             title: taskTitle,
             description: description,
             creatorId: userData.id,
-            assignUser: assignTo,
+            assigneeId: assignTo,
           }),
         }
       );
@@ -237,7 +232,7 @@ const HomeScreen = ({ navigation, route }) => {
         </View>
       }
 
-      {userData?.role === "teacher" && (
+      {userData && (userData?.role === "TEACHER" || userData?.role === "teacher") && (
         <View style={{ backgroundColor: "#fff" }}>
           <View style={{ margin: 15 }}>
             <TextInput
@@ -319,7 +314,7 @@ const HomeScreen = ({ navigation, route }) => {
           </View>
         </View>
       )}
-      {userData?.role === "teacher" && tasksAfterChangeStatus && (
+      {userData && (userData?.role === "TEACHER" || userData?.role === "teacher") && tasksAfterChangeStatus && (
         <>
           {tasksAfterChangeStatus
             // Filter out completed tasks
@@ -328,7 +323,7 @@ const HomeScreen = ({ navigation, route }) => {
             ))}
         </>
       )}
-      {userData?.role === "student" && userTasksAfterChangeStatus && (
+      {userData && (userData?.role === "STUDENT" || userData?.role === "student") && userTasksAfterChangeStatus && (
         <>
           {/* <p>Number of tasks: {dedicatedTasks.length}</p> */}
           {userTasksAfterChangeStatus.map((task) => (

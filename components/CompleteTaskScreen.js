@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Button, ScrollView, StyleSheet, Text, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { BASE_URL } from '@env';
 
 const CompleteTaskScreen = () => {
   const [tasks, setTasks] = useState(null);
   const [userData, setUserData] = useState(null);
   const [userCompletedTasks, setUserCompletedTasks] = useState(null);
-  const [effectCounter, setEffectCounter] = useState(0); 
+  const [effectCounter, setEffectCounter] = useState(0);
 
   useEffect(() => {
     if (effectCounter < 4) {
@@ -28,7 +29,7 @@ const CompleteTaskScreen = () => {
       setUserCompletedTasks(tasks);
     }
   }, [userData, tasks]);
-  
+
 
   const userDataFromAsyncStorage = async () => {
     try {
@@ -43,7 +44,7 @@ const CompleteTaskScreen = () => {
   };
 
   const getTasks = () => {
-    return fetch("https://taskmate-backend.onrender.com/completeTasks")
+    return fetch(`${BASE_URL}completeTasks`)
       .then((response) => response.json())
       .then((data) => {
         setTasks(data);

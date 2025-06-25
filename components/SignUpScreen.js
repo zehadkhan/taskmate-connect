@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { BASE_URL } from '@env';
 import {
   ActivityIndicator,
   Image,
@@ -46,11 +47,11 @@ const SignUpScreen = ({ navigation }) => {
       }
       // Reset error state
       setError("");
-  
+
       // Perform login logic (e.g., call an API to authenticate the user)
       // For demonstration, we're just logging the username and password
       console.log(username, email, password, role);
-      const response = await fetch("https://taskmate-backend.onrender.com/users/create",{
+      const response = await fetch(`${BASE_URL}users/create`,{
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -107,8 +108,8 @@ const SignUpScreen = ({ navigation }) => {
         onValueChange={(itemValue, itemIndex) => setRole(itemValue)}
       >
         <Picker.Item label="Select Role" value="" />
-        <Picker.Item label="Student" value="student" />
-        <Picker.Item label="Teacher" value="teacher" />
+        <Picker.Item label="STUDENT" value="STUDENT" />
+        <Picker.Item label="TEACHER" value="TEACHER" />
       </Picker>
 
       <TouchableOpacity

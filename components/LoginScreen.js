@@ -1,3 +1,4 @@
+import { BASE_URL } from '@env';
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -39,7 +40,7 @@ const LoginScreen = ({ navigation }) => {
 
     try {
       const response = await fetch(
-        "https://taskmate-backend.onrender.com/login",
+        `${BASE_URL}login`,
         {
           method: "POST",
           headers: {
@@ -53,13 +54,17 @@ const LoginScreen = ({ navigation }) => {
       );
 
       const data = await response.json();
-      await AsyncStorage.setItem("userData", JSON.stringify(data));
-
+      
       if (!response.ok) {
-        setError(data.message || "Something went wrong");
+        setError(data.error || "Something went wrong");
+        setLoading(false);
         return;
       }
+      
       console.log("Login Response: ", data);
+      
+      // Store the user data in AsyncStorage
+      await AsyncStorage.setItem("userData", JSON.stringify(data));
 
       // If login successful, navigate to Home screen
       navigation.navigate("Home");

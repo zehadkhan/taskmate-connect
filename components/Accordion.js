@@ -16,6 +16,7 @@ import {
   Inter_400Regular,
 } from "@expo-google-fonts/inter";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { BASE_URL } from '@env';
 
 const Accordion = ({ navigation, tasks }) => {
   const [open, setOpen] = useState(false);
@@ -42,7 +43,7 @@ const Accordion = ({ navigation, tasks }) => {
     console.log("Task ID: ", taskId);
     try {
       const responseCompleteTasks = await fetch(
-        "https://taskmate-backend.onrender.com/completeTasks/create",
+        `${BASE_URL}completeTasks/create`,
         {
           method: "POST",
           headers: {
@@ -64,7 +65,7 @@ const Accordion = ({ navigation, tasks }) => {
       }
 
       const response = await fetch(
-        `https://taskmate-backend.onrender.com/tasks/${taskId}`,
+        `${BASE_URL}tasks/${taskId}`,
         {
           method: "PATCH",
           headers: {
@@ -91,7 +92,7 @@ const Accordion = ({ navigation, tasks }) => {
   const handleDeleteTask = async (taskId) => {
     try {
       const response = await fetch(
-        `https://taskmate-backend.onrender.com/tasks/${taskId}`,
+        `${BASE_URL}tasks/${taskId}`,
         {
           method: "DELETE",
         }
