@@ -18,7 +18,8 @@ import Accordion from "./Accordion";
 import { AntDesign, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useFonts, Inter_700Bold, Inter_400Regular, Inter_600SemiBold } from "@expo-google-fonts/inter";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-// import { SelectList } from "react-native-dropdown-select-list";
+import { SelectList } from 'react-native-dropdown-select-list';
+import DateTimePicker from '@react-native-community/datetimepicker';
 // import notifee from '@notifee/react-native';
 
 const HomeScreen = ({ navigation, route }) => {
@@ -40,6 +41,9 @@ const HomeScreen = ({ navigation, route }) => {
   const [assignValue, setAssignValue] = useState();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [activeTab, setActiveTab] = useState("active"); // "active" or "completed"
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [deadlineDate, setDeadlineDate] = useState(null);
 
   useEffect(() => {
     userDataFromAsyncStorage();
@@ -374,12 +378,53 @@ const HomeScreen = ({ navigation, route }) => {
                   onChangeText={setDescription}
                   multiline
                 />
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="Deadline (YYYY-MM-DD)"
-                  value={deadline}
-                  onChangeText={setDeadline}
-                />
+                <Text style={styles.pickerLabel}>Deadline</Text>
+                <TouchableOpacity
+                  style={styles.deadlinePickerButton}
+                  onPress={() => setShowDatePicker(true)}
+                >
+                  <Text style={styles.deadlinePickerButtonText}>
+                    {deadlineDate ? deadlineDate.toLocaleString() : 'Select Deadline'}
+                  </Text>
+                </TouchableOpacity>
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={deadlineDate || new Date()}
+                    mode="date"
+                    display="default"
+                    onChange={(event, selectedDate) => {
+                      setShowDatePicker(false);
+                      if (selectedDate) {
+                        // Save the date, but keep the time as now (or 00:00)
+                        const newDate = new Date(selectedDate);
+                        if (deadlineDate) {
+                          newDate.setHours(deadlineDate.getHours());
+                          newDate.setMinutes(deadlineDate.getMinutes());
+                        }
+                        setDeadlineDate(newDate);
+                        setTimeout(() => setShowTimePicker(true), 200); // Show time picker next
+                      }
+                    }}
+                  />
+                )}
+                {showTimePicker && (
+                  <DateTimePicker
+                    value={deadlineDate || new Date()}
+                    mode="time"
+                    display="default"
+                    onChange={(event, selectedTime) => {
+                      setShowTimePicker(false);
+                      if (selectedTime) {
+                        // Combine with the previously selected date
+                        const newDate = new Date(deadlineDate || new Date());
+                        newDate.setHours(selectedTime.getHours());
+                        newDate.setMinutes(selectedTime.getMinutes());
+                        setDeadlineDate(newDate);
+                        setDeadline(newDate.toISOString()); // Save as ISO string for backend
+                      }
+                    }}
+                  />
+                )}
                 <TextInput
                   style={styles.textInput}
                   placeholder="Points (default: 10)"
@@ -387,17 +432,18 @@ const HomeScreen = ({ navigation, route }) => {
                   onChangeText={setPoints}
                   keyboardType="numeric"
                 />
+                <Text style={styles.pickerLabel}>Assign To Student</Text>
                 <View style={styles.pickerContainer}>
-                  <Picker
-                    selectedValue={assignTo}
-                    onValueChange={(itemValue) => setAssignTo(itemValue)}
-                    style={styles.picker}
-                  >
-                    <Picker.Item label="Select Student" value="" />
-                    {assignValue?.map((user) => (
-                      <Picker.Item key={user.id} label={user.userName} value={user.id} />
-                    ))}
-                  </Picker>
+                  <SelectList
+                    setSelected={setAssignTo}
+                    data={assignValue?.map(user => ({ key: user.id, value: user.userName })) || []}
+                    placeholder="Select Student"
+                    searchPlaceholder="Search student..."
+                    boxStyles={{ borderWidth: 0, backgroundColor: 'transparent' }}
+                    dropdownStyles={{ borderWidth: 1, borderColor: '#ddd', borderRadius: 8, backgroundColor: '#fff' }}
+                    inputStyles={{ fontFamily: 'Inter-Regular', fontSize: 16, color: '#333' }}
+                    dropdownTextStyles={{ fontFamily: 'Inter-Regular', fontSize: 16, color: '#333' }}
+                  />
                 </View>
                 <TouchableOpacity
                   style={styles.submitButton}
@@ -735,14 +781,21 @@ const styles = StyleSheet.create({
     minHeight: 100,
   },
   pickerContainer: {
-    borderWidth: 1,
-    borderColor: "#e1e5e9",
+    backgroundColor: '#f8f9fa',
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
     marginBottom: 16,
-    backgroundColor: "#f8f9fa",
+    paddingHorizontal: 4,
+    paddingVertical: 4,
+    minHeight: 54,
+    justifyContent: 'center',
   },
   picker: {
     height: 50,
+    width: '100%',
+    color: '#333',
+    backgroundColor: 'transparent',
   },
   submitButton: {
     backgroundColor: "#FF6B35",
@@ -792,5 +845,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#999",
     textAlign: "center",
+  },
+  pickerLabel: {
+    fontFamily: "Inter-SemiBold",
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 8,
+  },
+  deadlinePickerButton: {
+    borderWidth: 1,
+    borderColor: '#e1e5e9',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    backgroundColor: '#f8f9fa',
+    alignItems: 'flex-start',
+  },
+  deadlinePickerButtonText: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 16,
+    color: '#333',
   },
 });

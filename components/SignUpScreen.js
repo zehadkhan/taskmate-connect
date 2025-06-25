@@ -278,7 +278,68 @@ const SignUpScreen = ({ navigation }) => {
               </View>
             )}
 
+            {/* Role Selection */}
+            <View style={styles.roleContainer}>
+              <Text style={styles.roleLabel}>Select Your Role</Text>
+              <View style={styles.roleOptions}>
+                <TouchableOpacity
+                  style={[
+                    styles.roleOption,
+                    role === "STUDENT" && styles.roleOptionSelected
+                  ]}
+                  onPress={() => {
+                    setRole("STUDENT");
+                    setError("");
+                  }}
+                >
+                  <Text style={styles.roleEmoji}>👨‍🎓</Text>
+                  <Text style={[
+                    styles.roleText,
+                    role === "STUDENT" && styles.roleTextSelected
+                  ]}>
+                    Student
+                  </Text>
+                  {role === "STUDENT" && (
+                    <Ionicons name="checkmark-circle" size={20} color="#28a745" />
+                  )}
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={[
+                    styles.roleOption,
+                    role === "TEACHER" && styles.roleOptionSelected
+                  ]}
+                  onPress={() => {
+                    setRole("TEACHER");
+                    setError("");
+                  }}
+                >
+                  <Text style={styles.roleEmoji}>👨‍🏫</Text>
+                  <Text style={[
+                    styles.roleText,
+                    role === "TEACHER" && styles.roleTextSelected
+                  ]}>
+                    Teacher
+                  </Text>
+                  {role === "TEACHER" && (
+                    <Ionicons name="checkmark-circle" size={20} color="#28a745" />
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Alternative Picker (commented out for now) */}
+            {/* 
             <View style={styles.pickerContainer}>
+              <View style={styles.pickerHeader}>
+                <Ionicons name="person-circle-outline" size={20} color="#666" style={styles.inputIcon} />
+                <Text style={styles.pickerLabel}>
+                  {role ? (role === "STUDENT" ? "👨‍🎓 Student" : "👨‍🏫 Teacher") : "Select Role"}
+                </Text>
+                {role && (
+                  <Ionicons name="checkmark-circle" size={20} color="#28a745" style={styles.checkIcon} />
+                )}
+              </View>
               <Picker
                 selectedValue={role}
                 onValueChange={(itemValue) => {
@@ -286,12 +347,14 @@ const SignUpScreen = ({ navigation }) => {
                   setError("");
                 }}
                 style={styles.picker}
+                itemStyle={styles.pickerItem}
               >
-                <Picker.Item label="Select Role" value="" />
-                <Picker.Item label="Student" value="STUDENT" />
-                <Picker.Item label="Teacher" value="TEACHER" />
+                <Picker.Item label="Choose your role..." value="" />
+                <Picker.Item label="👨‍🎓 Student" value="STUDENT" />
+                <Picker.Item label="👨‍🏫 Teacher" value="TEACHER" />
               </Picker>
             </View>
+            */}
 
             <TouchableOpacity
               onPress={handleSignUp}
@@ -448,9 +511,29 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
+    borderWidth: 1,
+    borderColor: "#e1e5e9",
+  },
+  pickerHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
+  pickerLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#666",
+    marginLeft: 8,
   },
   picker: {
     height: 50,
+    paddingHorizontal: 16,
+  },
+  pickerItem: {
+    fontSize: 16,
+    color: "#333",
   },
   signUpButton: {
     backgroundColor: "#FF6B35",
@@ -484,5 +567,53 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#FF6B35",
     marginRight: 8,
+  },
+  checkIcon: {
+    marginLeft: 8,
+  },
+  roleContainer: {
+    marginBottom: 16,
+  },
+  roleLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#666",
+    marginBottom: 8,
+  },
+  roleOptions: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  roleOption: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 16,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#e1e5e9",
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  roleOptionSelected: {
+    borderColor: "#28a745",
+    backgroundColor: "#f8fff9",
+  },
+  roleEmoji: {
+    fontSize: 20,
+    marginRight: 8,
+  },
+  roleText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#666",
+  },
+  roleTextSelected: {
+    color: "#28a745",
   },
 });

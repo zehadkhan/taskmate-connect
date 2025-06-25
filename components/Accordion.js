@@ -23,6 +23,7 @@ const Accordion = ({ navigation, tasks, userData, onStatusChange, onTaskComplete
   const [open, setOpen] = useState(false);
   const [animation] = useState(new Animated.Value(0));
   const [error, setError] = useState("");
+  const [isCompleting, setIsCompleting] = useState(false);
   const taskId = tasks.id;
 
   const isTaskOverdue = (task) => {
@@ -39,6 +40,9 @@ const Accordion = ({ navigation, tasks, userData, onStatusChange, onTaskComplete
         setError("User data not loaded. Please try again.");
         return;
       }
+
+      setIsCompleting(true);
+      setError("");
 
       const responseCompleteTasks = await fetch(`${BASE_URL}completeTasks/create`, {
         method: "POST",
@@ -66,6 +70,8 @@ const Accordion = ({ navigation, tasks, userData, onStatusChange, onTaskComplete
     } catch (error) {
       console.error("Completing failed:", error);
       setError("Completing failed. Please try again.");
+    } finally {
+      setIsCompleting(false);
     }
   };
 
@@ -205,9 +211,17 @@ const Accordion = ({ navigation, tasks, userData, onStatusChange, onTaskComplete
                 </View>
               )}
             </View>
-            <Animated.View style={{ transform: [{ rotate: rotateAnimation }] }}>
-              <AntDesign name="down" size={20} color="#666" />
-            </Animated.View>
+            <View style={styles.rightSection}>
+              {tasks?.status === "COMPLETED" && (
+                <View style={styles.statusIndicator}>
+                  <Ionicons name="checkmark-circle" size={16} color="#28a745" />
+                  <Text style={styles.statusIndicatorText}>Completed</Text>
+                </View>
+              )}
+              <Animated.View style={{ transform: [{ rotate: rotateAnimation }] }}>
+                <AntDesign name="down" size={20} color="#666" />
+              </Animated.View>
+            </View>
           </View>
         </View>
       </TouchableWithoutFeedback>
@@ -222,14 +236,18 @@ const Accordion = ({ navigation, tasks, userData, onStatusChange, onTaskComplete
           <View style={styles.actionsSection}>
             {tasks?.status !== "COMPLETED" && (
               <TouchableOpacity
-                style={styles.completeButton}
-                onPress={() => {
-                  handleCompleteTask(taskId);
-                  navigation.navigate("CompleteTask");
-                }}
+                style={[styles.completeButton, isCompleting && styles.completeButtonDisabled]}
+                onPress={() => handleCompleteTask(taskId)}
+                disabled={isCompleting}
               >
-                <Ionicons name="checkmark-circle" size={20} color="#fff" />
-                <Text style={styles.completeButtonText}>Mark Complete</Text>
+                {isCompleting ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <>
+                    <Ionicons name="checkmark-circle" size={20} color="#fff" />
+                    <Text style={styles.completeButtonText}>Mark Complete</Text>
+                  </>
+                )}
               </TouchableOpacity>
             )}
 
@@ -271,6 +289,7 @@ const styles = StyleSheet.create({
   headerContent: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
   },
   taskIcon: {
     width: 48,
@@ -280,9 +299,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
+    flexShrink: 0,
   },
   taskInfo: {
     flex: 1,
+    minWidth: 0,
   },
   title: {
     fontFamily: "Inter-Bold",
@@ -290,15 +311,33 @@ const styles = StyleSheet.create({
     color: "#333",
     marginBottom: 4,
     lineHeight: 22,
+    flexShrink: 1,
   },
   status: {
     fontFamily: "Inter-Regular",
     fontSize: 14,
     color: "#666",
+    flexShrink: 1,
   },
   statusText: {
     fontFamily: "Inter-SemiBold",
     color: "#28a745",
+  },
+  statusIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f8f9fa",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginLeft: 8,
+    flexShrink: 0,
+  },
+  statusIndicatorText: {
+    fontFamily: "Inter-Regular",
+    fontSize: 12,
+    color: "#666",
+    marginLeft: 4,
   },
   content: {
     overflow: "hidden",
@@ -383,11 +422,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 4,
+    flexWrap: "wrap",
+    gap: 8,
   },
   pointsContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginLeft: 8,
   },
   pointsText: {
     fontFamily: "Inter-Regular",
@@ -398,10 +438,21 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginTop: 4,
+    flexWrap: "wrap",
   },
   deadlineText: {
     fontFamily: "Inter-Regular",
     fontSize: 14,
     color: "#666",
+    flexShrink: 1,
+  },
+  completeButtonDisabled: {
+    backgroundColor: "#ccc",
+  },
+  rightSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flexShrink: 0,
   },
 });
