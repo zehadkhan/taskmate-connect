@@ -15,7 +15,7 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 
-const LoginScreen = ({ navigation }) => {
+const LoginScreen = ({ navigation, onLoginSuccess }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -56,7 +56,10 @@ const LoginScreen = ({ navigation }) => {
       }
       
       await AsyncStorage.setItem("userData", JSON.stringify(data));
-      navigation.navigate("Home");
+      
+      if (onLoginSuccess) {
+        onLoginSuccess();
+      }
     } catch (error) {
       console.error("Login failed:", error);
       setError("Network error. Please check your connection.");

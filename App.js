@@ -64,6 +64,10 @@ export default function App() {
     }
   };
 
+  const handleSuccessfulLogin = () => {
+    setIsLoggedIn(true);
+  };
+
   // Show loading screen while checking login status
   if (!fontsLoaded || isLoading) {
     return (
@@ -78,20 +82,14 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator>
         {!person && !isLoggedIn ? (
+          // Show splash screen
           <Stack.Screen
             name="Splash"
             component={SplashScreen}
             options={{ headerShown: false }}
           />
-        ) : !isLoggedIn ? (
-          <Stack.Screen
-            name="Login"
-            component={LoginScreen}
-            options={{ headerShown: false }}
-          />
-        ) : null}
-        
-        {isLoggedIn && (
+        ) : isLoggedIn ? (
+          // Show home screen when logged in
           <Stack.Screen
             name="Home"
             component={HomeScreen}
@@ -108,34 +106,39 @@ export default function App() {
               ),
             }}
           />
+        ) : (
+          // Show login screen when not logged in
+          <Stack.Screen
+            name="Login"
+            options={{ headerShown: false }}
+          >
+            {(props) => <LoginScreen {...props} onLoginSuccess={handleSuccessfulLogin} />}
+          </Stack.Screen>
         )}
         
-        {person && !isLoggedIn && (
-          <>
-            <Stack.Screen
-              name="SignUp"
-              component={SignUpScreen}
-              options={{
-                title: "Sign Up",
-                headerStyle: {
-                  backgroundColor: "#FF6B35",
-                },
-                headerTintColor: "white",
-              }}
-            />
-            <Stack.Screen
-              name="CompleteTask"
-              component={CompleteTaskScreen}
-              options={{
-                title: "Complete Task",
-                headerStyle: {
-                  backgroundColor: "#FF6B35",
-                },
-                headerTintColor: "white",
-              }}
-            />
-          </>
-        )}
+        {/* Always include these screens for navigation */}
+        <Stack.Screen
+          name="SignUp"
+          component={SignUpScreen}
+          options={{
+            title: "Sign Up",
+            headerStyle: {
+              backgroundColor: "#FF6B35",
+            },
+            headerTintColor: "white",
+          }}
+        />
+        <Stack.Screen
+          name="CompleteTask"
+          component={CompleteTaskScreen}
+          options={{
+            title: "Complete Task",
+            headerStyle: {
+              backgroundColor: "#FF6B35",
+            },
+            headerTintColor: "white",
+          }}
+        />
       </Stack.Navigator>
       
       {!person && !isLoggedIn && (

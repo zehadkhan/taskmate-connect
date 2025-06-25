@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from "react";
 import {
   Image,
   StyleSheet,
@@ -9,14 +10,14 @@ import {
   SafeAreaView,
   StatusBar,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { BASE_URL } from '@env';
 import { Picker } from "@react-native-picker/picker";
 import Accordion from "./Accordion";
-import { useEffect, useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AntDesign, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useFonts, Inter_700Bold, Inter_400Regular, Inter_600SemiBold } from "@expo-google-fonts/inter";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 // import { SelectList } from "react-native-dropdown-select-list";
 // import notifee from '@notifee/react-native';
 
@@ -24,17 +25,21 @@ const HomeScreen = ({ navigation, route }) => {
   const [taskTitle, setTaskTitle] = useState("");
   const [description, setDescription] = useState("");
   const [assignTo, setAssignTo] = useState(null);
+  const [deadline, setDeadline] = useState("");
+  const [points, setPoints] = useState("10");
   const [error, setError] = useState("");
   const [tasks, setTasks] = useState();
   const [userData, setUserData] = useState();
   const [dedicatedTasks, setDedicatedTasks] = useState();
   const [tasksAfterChangeStatus, setTasksAfterChangeStatus] = useState(null);
-  const [userTasksAfterChangeStatus, setUserTasksAfterChangeStatus] =
-    useState(null);
+  const [userTasksAfterChangeStatus, setUserTasksAfterChangeStatus] = useState(null);
+  const [completedTasks, setCompletedTasks] = useState(null);
+  const [userCompletedTasks, setUserCompletedTasks] = useState(null);
 
   const [getUser, setGetUser] = useState();
   const [assignValue, setAssignValue] = useState();
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [activeTab, setActiveTab] = useState("active"); // "active" or "completed"
 
   useEffect(() => {
     userDataFromAsyncStorage();
@@ -100,56 +105,29 @@ const HomeScreen = ({ navigation, route }) => {
 
   useEffect(() => {
     if (tasks) {
-      const filteredTasks = tasks.filter(
-        (task) => task.status === "COMPLETED"
-      );
+      // Separate active and completed tasks
+      const activeTasks = tasks.filter(task => task.status !== "COMPLETED");
+      const completedTasksList = tasks.filter(task => task.status === "COMPLETED");
+      
+      setCompletedTasks(completedTasksList);
 
-      const arrayDiffByProperty = (arr1, arr2, property) => {
-        return arr1.filter(
-          (item1) => !arr2.some((item2) => item2[property] === item1[property])
+      if (userData?.role === "TEACHER" || userData?.role === "teacher") {
+        setTasksAfterChangeStatus(activeTasks);
+      } else {
+        const assignedTasks = activeTasks.filter(
+          (task) => task.assigneeId === parseInt(userData?.id)
         );
-      };
+        setUserTasksAfterChangeStatus(assignedTasks);
+      }
 
-      const tasksAfterChangeStatus = arrayDiffByProperty(
-        tasks,
-        filteredTasks,
-        "id"
-      );
-      setTasksAfterChangeStatus(tasksAfterChangeStatus); // Set the value
-    }
-  }, [tasks]);
-
-  useEffect(() => {
-    if (userData && tasks) {
-      const assignedTasks = tasks.filter(
-        (task) => task.assigneeId === parseInt(userData.id)
-      );
-      setDedicatedTasks(assignedTasks);
-    }
-  }, [userData, tasks]);
-
-  useEffect(() => {
-    if (userData && (userData?.role === "STUDENT" || userData?.role === "student") && dedicatedTasks) {
-      const studentFilteredTasks = dedicatedTasks.filter(
-        (studentTask) =>
-          studentTask.assigneeId === parseInt(userData.id) &&
-          studentTask.status === "COMPLETED"
-      );
-
-      const arrayDiffByProperty = (arr1, arr2, property) => {
-        return arr1.filter(
-          (item1) => !arr2.some((item2) => item2[property] === item1[property])
+      if (userData?.role === "STUDENT" || userData?.role === "student") {
+        const userCompleted = completedTasksList.filter(
+          (task) => task.assigneeId === parseInt(userData?.id)
         );
-      };
-
-      const tasksAfterChangeStatus = arrayDiffByProperty(
-        dedicatedTasks,
-        studentFilteredTasks,
-        "id"
-      );
-      setUserTasksAfterChangeStatus(tasksAfterChangeStatus); // Set the value
+        setUserCompletedTasks(userCompleted);
+      }
     }
-  }, [userData, dedicatedTasks]);
+  }, [tasks, userData]);
 
   const handleTaskCreation = async () => {
     try {
@@ -163,6 +141,10 @@ const HomeScreen = ({ navigation, route }) => {
       }
       if (!assignTo) {
         setError("Please select a student to assign the task");
+        return;
+      }
+      if (!deadline) {
+        setError("Please set a deadline");
         return;
       }
 
@@ -180,6 +162,8 @@ const HomeScreen = ({ navigation, route }) => {
             description: description,
             creatorId: userData.id,
             assigneeId: assignTo,
+            deadline: deadline,
+            points: parseInt(points),
           }),
         }
       );
@@ -193,6 +177,8 @@ const HomeScreen = ({ navigation, route }) => {
       setTaskTitle("");
       setDescription("");
       setAssignTo("");
+      setDeadline("");
+      setPoints("10");
       setShowCreateForm(false);
       Alert.alert("Success", "Task created successfully!");
 
@@ -203,12 +189,62 @@ const HomeScreen = ({ navigation, route }) => {
     }
   };
 
+  const handleTaskCompleted = () => {
+    // Refresh tasks after completion
+    getTasks();
+  };
+
   const getTaskCount = () => {
     if (userData?.role === "TEACHER" || userData?.role === "teacher") {
       return tasksAfterChangeStatus?.length || 0;
     } else {
       return userTasksAfterChangeStatus?.length || 0;
     }
+  };
+
+  const getCompletedTaskCount = () => {
+    if (userData?.role === "TEACHER" || userData?.role === "teacher") {
+      return completedTasks?.length || 0;
+    } else {
+      return userCompletedTasks?.length || 0;
+    }
+  };
+
+  const calculateTotalPoints = () => {
+    const currentTasks = activeTab === "active" 
+      ? (userData?.role === "TEACHER" || userData?.role === "teacher" 
+          ? tasksAfterChangeStatus 
+          : userTasksAfterChangeStatus)
+      : (userData?.role === "TEACHER" || userData?.role === "teacher" 
+          ? completedTasks 
+          : userCompletedTasks);
+
+    if (!currentTasks) return 0;
+
+    return currentTasks.reduce((total, task) => {
+      const taskPoints = task.points || 10;
+      const now = new Date();
+      const taskDeadline = task.deadline ? new Date(task.deadline) : null;
+      
+      // If task is completed, add points
+      if (task.status === "COMPLETED") {
+        return total + taskPoints;
+      }
+      
+      // If task is active and past deadline, subtract points
+      if (taskDeadline && now > taskDeadline && task.status !== "COMPLETED") {
+        return total - taskPoints;
+      }
+      
+      return total;
+    }, 0);
+  };
+
+  const isTaskOverdue = (task) => {
+    if (!task.deadline || task.status === "COMPLETED") return false;
+    const now = new Date();
+    const taskDeadline = new Date(task.deadline);
+    return now > taskDeadline;
   };
 
   let [fontsLoaded] = useFonts({
@@ -252,6 +288,18 @@ const HomeScreen = ({ navigation, route }) => {
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Points Card */}
+        <View style={styles.pointsCard}>
+          <View style={styles.pointsHeader}>
+            <MaterialIcons name="stars" size={24} color="#FFD700" />
+            <Text style={styles.pointsTitle}>Total Points</Text>
+          </View>
+          <Text style={styles.pointsValue}>{calculateTotalPoints()}</Text>
+          <Text style={styles.pointsSubtext}>
+            {activeTab === "active" ? "Active Tasks" : "Completed Tasks"}
+          </Text>
+        </View>
+
         {/* Stats Card */}
         <View style={styles.statsCard}>
           <View style={styles.statItem}>
@@ -260,28 +308,55 @@ const HomeScreen = ({ navigation, route }) => {
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>
-              {tasks?.filter(task => task.status === "COMPLETED")?.length || 0}
-            </Text>
-            <Text style={styles.statLabel}>Completed</Text>
+            <Text style={styles.statNumber}>{getCompletedTaskCount()}</Text>
+            <Text style={styles.statLabel}>Completed Tasks</Text>
           </View>
         </View>
 
-        {/* Create Task Section for Teachers */}
-        {userData && (userData?.role === "TEACHER" || userData?.role === "teacher") && (
+        {/* Tab Navigation */}
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === "active" && styles.activeTab]}
+            onPress={() => setActiveTab("active")}
+          >
+            <MaterialIcons 
+              name="pending-actions" 
+              size={20} 
+              color={activeTab === "active" ? "#FF6B35" : "#666"} 
+            />
+            <Text style={[styles.tabText, activeTab === "active" && styles.activeTabText]}>
+              Active Tasks
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === "completed" && styles.activeTab]}
+            onPress={() => setActiveTab("completed")}
+          >
+            <MaterialIcons 
+              name="task-alt" 
+              size={20} 
+              color={activeTab === "completed" ? "#FF6B35" : "#666"} 
+            />
+            <Text style={[styles.tabText, activeTab === "completed" && styles.activeTabText]}>
+              Completed Tasks
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Create Task Section (Only for Teachers) */}
+        {(userData?.role === "TEACHER" || userData?.role === "teacher") && activeTab === "active" && (
           <View style={styles.createTaskSection}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.createTaskButton}
               onPress={() => setShowCreateForm(!showCreateForm)}
             >
-              <Ionicons 
-                name={showCreateForm ? "remove-circle" : "add-circle"} 
+              <MaterialIcons name="add-task" size={24} color="#FF6B35" />
+              <Text style={styles.createTaskButtonText}>Create New Task</Text>
+              <MaterialIcons 
+                name={showCreateForm ? "expand-less" : "expand-more"} 
                 size={24} 
                 color="#FF6B35" 
               />
-              <Text style={styles.createTaskButtonText}>
-                {showCreateForm ? "Cancel" : "Create New Task"}
-              </Text>
             </TouchableOpacity>
 
             {showCreateForm && (
@@ -289,20 +364,29 @@ const HomeScreen = ({ navigation, route }) => {
                 <TextInput
                   style={styles.textInput}
                   placeholder="Task Title"
-                  placeholderTextColor="#999"
                   value={taskTitle}
                   onChangeText={setTaskTitle}
                 />
                 <TextInput
-                  multiline={true}
-                  numberOfLines={4}
                   style={styles.detailsInput}
                   placeholder="Task Description"
-                  placeholderTextColor="#999"
                   value={description}
                   onChangeText={setDescription}
+                  multiline
                 />
-                
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Deadline (YYYY-MM-DD)"
+                  value={deadline}
+                  onChangeText={setDeadline}
+                />
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Points (default: 10)"
+                  value={points}
+                  onChangeText={setPoints}
+                  keyboardType="numeric"
+                />
                 <View style={styles.pickerContainer}>
                   <Picker
                     selectedValue={assignTo}
@@ -311,62 +395,107 @@ const HomeScreen = ({ navigation, route }) => {
                   >
                     <Picker.Item label="Select Student" value="" />
                     {assignValue?.map((user) => (
-                      <Picker.Item
-                        key={user.id}
-                        label={`${user.userName} (ID: ${user.id})`}
-                        value={user.id}
-                      />
+                      <Picker.Item key={user.id} label={user.userName} value={user.id} />
                     ))}
                   </Picker>
                 </View>
-
-                {error ? <Text style={styles.error}>{error}</Text> : null}
-                
-                <TouchableOpacity onPress={handleTaskCreation} style={styles.submitButton}>
+                <TouchableOpacity
+                  style={styles.submitButton}
+                  onPress={handleTaskCreation}
+                >
                   <Text style={styles.submitButtonText}>Create Task</Text>
-                  <Ionicons name="send" size={16} color="#fff" />
                 </TouchableOpacity>
+                {error ? <Text style={styles.errorText}>{error}</Text> : null}
               </View>
             )}
           </View>
         )}
 
-        {/* Tasks Section */}
+        {/* Tasks List */}
         <View style={styles.tasksSection}>
           <View style={styles.sectionHeader}>
-            <MaterialIcons name="assignment" size={24} color="#333" />
             <Text style={styles.sectionTitle}>
-              {userData?.role === "TEACHER" || userData?.role === "teacher" 
-                ? "All Tasks" 
-                : "My Tasks"
-              }
+              {activeTab === "active" ? "Active Tasks" : "Completed Tasks"}
             </Text>
           </View>
 
-          {userData && (userData?.role === "TEACHER" || userData?.role === "teacher") && tasksAfterChangeStatus && (
-            <View style={styles.tasksList}>
-              {tasksAfterChangeStatus.map((task) => (
-                <Accordion navigation={navigation} tasks={task} key={task.id} />
-              ))}
-            </View>
+          {activeTab === "active" && (
+            <>
+              {userData && (userData?.role === "TEACHER" || userData?.role === "teacher") && tasksAfterChangeStatus && (
+                <View style={styles.tasksList}>
+                  {tasksAfterChangeStatus.map((task) => (
+                    <Accordion 
+                      navigation={navigation} 
+                      tasks={task} 
+                      userData={userData} 
+                      onTaskCompleted={handleTaskCompleted} 
+                      key={task.id} 
+                    />
+                  ))}
+                </View>
+              )}
+
+              {userData && (userData?.role === "STUDENT" || userData?.role === "student") && userTasksAfterChangeStatus && (
+                <View style={styles.tasksList}>
+                  {userTasksAfterChangeStatus.map((task) => (
+                    <Accordion 
+                      navigation={navigation} 
+                      tasks={task} 
+                      userData={userData} 
+                      onTaskCompleted={handleTaskCompleted} 
+                      key={task.id} 
+                    />
+                  ))}
+                </View>
+              )}
+            </>
           )}
 
-          {userData && (userData?.role === "STUDENT" || userData?.role === "student") && userTasksAfterChangeStatus && (
-            <View style={styles.tasksList}>
-              {userTasksAfterChangeStatus.map((task) => (
-                <Accordion navigation={navigation} tasks={task} key={task.id} />
-              ))}
-            </View>
+          {activeTab === "completed" && (
+            <>
+              {userData && (userData?.role === "TEACHER" || userData?.role === "teacher") && completedTasks && (
+                <View style={styles.tasksList}>
+                  {completedTasks.map((task) => (
+                    <Accordion 
+                      navigation={navigation} 
+                      tasks={task} 
+                      userData={userData} 
+                      onTaskCompleted={handleTaskCompleted} 
+                      key={task.id} 
+                    />
+                  ))}
+                </View>
+              )}
+
+              {userData && (userData?.role === "STUDENT" || userData?.role === "student") && userCompletedTasks && (
+                <View style={styles.tasksList}>
+                  {userCompletedTasks.map((task) => (
+                    <Accordion 
+                      navigation={navigation} 
+                      tasks={task} 
+                      userData={userData} 
+                      onTaskCompleted={handleTaskCompleted} 
+                      key={task.id} 
+                    />
+                  ))}
+                </View>
+              )}
+            </>
           )}
 
-          {getTaskCount() === 0 && (
+          {((activeTab === "active" && getTaskCount() === 0) || 
+            (activeTab === "completed" && getCompletedTaskCount() === 0)) && (
             <View style={styles.emptyState}>
               <MaterialIcons name="assignment-turned-in" size={64} color="#ccc" />
-              <Text style={styles.emptyStateText}>No tasks available</Text>
+              <Text style={styles.emptyStateText}>
+                {activeTab === "active" ? "No active tasks" : "No completed tasks"}
+              </Text>
               <Text style={styles.emptyStateSubtext}>
-                {userData?.role === "TEACHER" || userData?.role === "teacher" 
-                  ? "Create a new task to get started" 
-                  : "Tasks will appear here when assigned"
+                {activeTab === "active" 
+                  ? (userData?.role === "TEACHER" || userData?.role === "teacher" 
+                      ? "Create a new task to get started" 
+                      : "Tasks will appear here when assigned")
+                  : "Completed tasks will appear here"
                 }
               </Text>
             </View>
@@ -451,11 +580,45 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
   },
-  statsCard: {
+  pointsCard: {
     backgroundColor: "#fff",
     borderRadius: 16,
     padding: 20,
     marginTop: 20,
+    marginBottom: 16,
+    alignItems: "center",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  pointsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  pointsTitle: {
+    fontFamily: "Inter-SemiBold",
+    fontSize: 16,
+    color: "#333",
+    marginLeft: 8,
+  },
+  pointsValue: {
+    fontFamily: "Inter-Bold",
+    fontSize: 36,
+    color: "#FF6B35",
+    marginBottom: 4,
+  },
+  pointsSubtext: {
+    fontFamily: "Inter-Regular",
+    fontSize: 14,
+    color: "#666",
+  },
+  statsCard: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 20,
     marginBottom: 20,
     flexDirection: "row",
     justifyContent: "space-around",
@@ -483,12 +646,45 @@ const styles = StyleSheet.create({
     width: 1,
     backgroundColor: "#eee",
   },
+  tabContainer: {
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    marginBottom: 20,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  tab: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+  },
+  activeTab: {
+    backgroundColor: "#FFF3F0",
+  },
+  tabText: {
+    fontFamily: "Inter-SemiBold",
+    fontSize: 14,
+    color: "#666",
+    marginLeft: 8,
+  },
+  activeTabText: {
+    color: "#FF6B35",
+  },
   createTaskSection: {
     marginBottom: 20,
   },
   createTaskButton: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     backgroundColor: "#fff",
     padding: 16,
     borderRadius: 12,
@@ -503,6 +699,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#FF6B35",
     marginLeft: 12,
+    flex: 1,
   },
   createTaskForm: {
     backgroundColor: "#fff",
@@ -547,39 +744,34 @@ const styles = StyleSheet.create({
   picker: {
     height: 50,
   },
-  error: {
+  submitButton: {
+    backgroundColor: "#FF6B35",
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  submitButtonText: {
+    fontFamily: "Inter-SemiBold",
+    fontSize: 16,
+    color: "#fff",
+  },
+  errorText: {
     color: "#dc3545",
     fontFamily: "Inter-Regular",
     fontSize: 14,
-    marginBottom: 16,
-  },
-  submitButton: {
-    backgroundColor: "#FF6B35",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 16,
-    borderRadius: 8,
-  },
-  submitButtonText: {
-    fontFamily: "Inter-Bold",
-    fontSize: 16,
-    color: "#fff",
-    marginRight: 8,
+    marginTop: 12,
+    textAlign: "center",
   },
   tasksSection: {
     marginBottom: 20,
   },
   sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
     marginBottom: 16,
   },
   sectionTitle: {
     fontFamily: "Inter-Bold",
     fontSize: 20,
     color: "#333",
-    marginLeft: 8,
   },
   tasksList: {
     gap: 12,
@@ -589,7 +781,7 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
   },
   emptyStateText: {
-    fontFamily: "Inter-Bold",
+    fontFamily: "Inter-SemiBold",
     fontSize: 18,
     color: "#666",
     marginTop: 16,

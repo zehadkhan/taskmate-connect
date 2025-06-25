@@ -19,40 +19,36 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BASE_URL } from '@env';
 
-const Accordion = ({ navigation, tasks, onStatusChange }) => {
+const Accordion = ({ navigation, tasks, userData, onStatusChange, onTaskCompleted }) => {
   const [open, setOpen] = useState(false);
   const [animation] = useState(new Animated.Value(0));
-  const [userData, setUserData] = useState();
   const [error, setError] = useState("");
   const taskId = tasks.id;
 
-  useEffect(() => {
-    userDataFromAsyncStorage();
-  }, []);
-
-  const userDataFromAsyncStorage = async () => {
-    try {
-      const userDataString = await AsyncStorage.getItem("userData");
-      if (userDataString) {
-        const userData = JSON.parse(userDataString);
-        setUserData(userData);
-      }
-    } catch (error) {
-      console.error("Error fetching data from AsyncStorage:", error);
-    }
+  const isTaskOverdue = (task) => {
+    if (!task.deadline || task.status === "COMPLETED") return false;
+    const now = new Date();
+    const taskDeadline = new Date(task.deadline);
+    return now > taskDeadline;
   };
 
   const handleCompleteTask = async (taskId) => {
     try {
+      // Check if userData is loaded
+      if (!userData || !userData.id) {
+        setError("User data not loaded. Please try again.");
+        return;
+      }
+
       const responseCompleteTasks = await fetch(`${BASE_URL}completeTasks/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          complete: true,
+          completed: true,
           taskId: taskId,
-          userId: userData?.id,
+          userId: userData.id,
         }),
       });
       const responseCompleteTasksData = await responseCompleteTasks.json();
@@ -61,22 +57,12 @@ const Accordion = ({ navigation, tasks, onStatusChange }) => {
         throw new Error(responseCompleteTasksData.error || "Failed to complete task");
       }
 
-      const response = await fetch(`${BASE_URL}tasks/${taskId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          completeTaskStatus: true,
-        }),
-      });
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to complete task");
-      }
-
       Alert.alert("Success", "Task completed successfully!");
+      
+      // Call the callback to refresh the tasks list
+      if (onTaskCompleted) {
+        onTaskCompleted();
+      }
     } catch (error) {
       console.error("Completing failed:", error);
       setError("Completing failed. Please try again.");
@@ -178,15 +164,46 @@ const Accordion = ({ navigation, tasks, onStatusChange }) => {
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <View style={styles.taskIcon}>
-              <MaterialIcons name="assignment" size={24} color="#FF6B35" />
+              {tasks?.status === "COMPLETED" ? (
+                <Ionicons name="checkmark-circle" size={24} color="#28a745" />
+              ) : (
+                <MaterialIcons name="assignment" size={24} color="#FF6B35" />
+              )}
             </View>
             <View style={styles.taskInfo}>
               <Text style={styles.title} numberOfLines={2}>
                 {tasks?.title}
               </Text>
-              <Text style={styles.status}>
-                Status: <Text style={styles.statusText}>Active</Text>
-              </Text>
+              <View style={styles.taskMeta}>
+                <Text style={styles.status}>
+                  Status: <Text style={[
+                    styles.statusText, 
+                    { color: tasks?.status === "COMPLETED" ? "#28a745" : "#FF6B35" }
+                  ]}>
+                    {tasks?.status || "PENDING"}
+                  </Text>
+                </Text>
+                <View style={styles.pointsContainer}>
+                  <MaterialIcons name="stars" size={16} color="#FFD700" />
+                  <Text style={styles.pointsText}>{tasks?.points || 10} pts</Text>
+                </View>
+              </View>
+              {tasks?.deadline && (
+                <View style={styles.deadlineContainer}>
+                  <MaterialIcons 
+                    name="schedule" 
+                    size={14} 
+                    color={isTaskOverdue(tasks) ? "#dc3545" : "#666"} 
+                  />
+                  <Text style={[
+                    styles.deadlineText, 
+                    { color: isTaskOverdue(tasks) ? "#dc3545" : "#666" }
+                  ]}>
+                    Due: {new Date(tasks.deadline).toLocaleDateString()}
+                    {isTaskOverdue(tasks) && " (Overdue)"}
+                  </Text>
+                </View>
+              )}
             </View>
             <Animated.View style={{ transform: [{ rotate: rotateAnimation }] }}>
               <AntDesign name="down" size={20} color="#666" />
@@ -203,16 +220,18 @@ const Accordion = ({ navigation, tasks, onStatusChange }) => {
           </View>
 
           <View style={styles.actionsSection}>
-            <TouchableOpacity
-              style={styles.completeButton}
-              onPress={() => {
-                handleCompleteTask(taskId);
-                navigation.navigate("CompleteTask");
-              }}
-            >
-              <Ionicons name="checkmark-circle" size={20} color="#fff" />
-              <Text style={styles.completeButtonText}>Mark Complete</Text>
-            </TouchableOpacity>
+            {tasks?.status !== "COMPLETED" && (
+              <TouchableOpacity
+                style={styles.completeButton}
+                onPress={() => {
+                  handleCompleteTask(taskId);
+                  navigation.navigate("CompleteTask");
+                }}
+              >
+                <Ionicons name="checkmark-circle" size={20} color="#fff" />
+                <Text style={styles.completeButtonText}>Mark Complete</Text>
+              </TouchableOpacity>
+            )}
 
             {(userData?.role === "TEACHER" || userData?.role === "teacher") && (
               <TouchableOpacity
@@ -359,5 +378,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 12,
     textAlign: "center",
+  },
+  taskMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  pointsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 8,
+  },
+  pointsText: {
+    fontFamily: "Inter-Regular",
+    fontSize: 14,
+    color: "#666",
+  },
+  deadlineContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 4,
+  },
+  deadlineText: {
+    fontFamily: "Inter-Regular",
+    fontSize: 14,
+    color: "#666",
   },
 });
